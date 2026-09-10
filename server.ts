@@ -45,6 +45,52 @@ interface GenerateBody {
   atmosphereImages?: InlineImage[];
 }
 
+function isQuotaError(e: any): boolean {
+  const text = `${e?.message || ''} ${typeof e?.body === 'string' ? e.body : JSON.stringify(e?.body || '')} ${e?.name || ''}`;
+  return text.includes('429') || text.includes('RateLimitError') || text.includes('Quota exceeded') || text.includes('limit: 0');
+}
+
+// Extract clean, human-readable error messages from Gemini SDK or upstream errors
+function extractErrorMessage(e: any): string {
+  if (!e) return 'Unknown error occurred';
+  if (typeof e === 'string') return e;
+
+  if (isQuotaError(e)) {
+    return 'Gemini Omni Flash video generation requires a Gemini API key with billing enabled (paid tier), as the free tier has a quota limit of 0 for video models. Please select or configure a paid API key in AI Studio.';
+  }
+
+  let msg = '';
+  if (e.body) {
+    if (typeof e.body === 'string') {
+      try {
+        const parsed = JSON.parse(e.body);
+        if (parsed?.error?.message) msg = parsed.error.message;
+      } catch (_) {}
+      if (!msg) msg = e.body;
+    } else if (e.body.error?.message) {
+      msg = e.body.error.message;
+    } else if (e.body.message) {
+      msg = e.body.message;
+    }
+  }
+
+  if (!msg && e.message && typeof e.message === 'string') {
+    try {
+      const match = e.message.match(/\{[\s\S]*\}/);
+      if (match) {
+        const parsed = JSON.parse(match[0]);
+        if (parsed?.error?.message) msg = parsed.error.message;
+      }
+    } catch (_) {}
+    if (!msg) msg = e.message;
+  }
+
+  if (!msg && e.error?.message) msg = e.error.message;
+  if (!msg) msg = String(e);
+
+  return msg;
+}
+
 // Turns a tiny setting word/phrase ("jungle", "Mediterranean studio") into one
 // ~100-word natural-language image prompt for gemini-3.1-flash-lite-image: a clean, empty,
 // on-aesthetic product-environment shot with a clear staging surface.
@@ -200,7 +246,7 @@ Materials and physics: <how light and matter behave securely>. Audio: near-silen
       res.json({ prompt: response.text });
     } catch (e: any) {
       console.error('Error generating prompt:', e);
-      res.status(500).json({ error: e.message });
+      res.status(500).json({ error: extractErrorMessage(e) });
     }
   });
 
@@ -246,7 +292,7 @@ Output ONLY the style brief text — no labels, no quotes, no preamble.`;
       res.json({ description: (response.text || '').trim() });
     } catch (e: any) {
       console.error('Error describing image:', e);
-      res.status(500).json({ error: e.message });
+      res.status(500).json({ error: extractErrorMessage(e) });
     }
   });
 
@@ -300,7 +346,7 @@ Output ONLY the style brief text — no labels, no quotes, no preamble.`;
       res.json({ image: { data, mimeType }, prompt: imagePrompt });
     } catch (e: any) {
       console.error('Error generating atmosphere:', e);
-      res.status(500).json({ error: e?.body || e.message });
+      res.status(500).json({ error: extractErrorMessage(e) });
     }
   });
 
@@ -339,9 +385,14 @@ Output ONLY the style brief text — no labels, no quotes, no preamble.`;
 
       res.json({ interactionId: interaction.id, uri: interaction.output_video.uri, fileId });
     } catch (e: any) {
-      console.error('Error generating video:', e);
-      // Try to dump error details closely
-      res.status(500).json({ error: e?.body || e.message });
+      const isQuota = isQuotaError(e);
+      const errMsg = extractErrorMessage(e);
+      if (isQuota) {
+        console.warn('[Omni Video Quota Notice]', errMsg);
+      } else {
+        console.error('Error generating video:', e);
+      }
+      res.status(isQuota ? 429 : 500).json({ error: errMsg, isQuota });
     }
   });
 
@@ -376,8 +427,14 @@ Output ONLY the style brief text — no labels, no quotes, no preamble.`;
 
       res.json({ interactionId: interaction.id, uri: interaction.output_video.uri, fileId });
     } catch (e: any) {
-      console.error('Error editing video:', e);
-      res.status(500).json({ error: e?.body || e.message });
+      const isQuota = isQuotaError(e);
+      const errMsg = extractErrorMessage(e);
+      if (isQuota) {
+        console.warn('[Omni Edit Quota Notice]', errMsg);
+      } else {
+        console.error('Error editing video:', e);
+      }
+      res.status(isQuota ? 429 : 500).json({ error: errMsg, isQuota });
     }
   });
 
@@ -392,7 +449,7 @@ Output ONLY the style brief text — no labels, no quotes, no preamble.`;
       res.json({ state });
     } catch (e: any) {
       console.error('Error getting file status:', e);
-      res.status(500).json({ error: e.message });
+      res.status(500).json({ error: extractErrorMessage(e) });
     }
   });
 
