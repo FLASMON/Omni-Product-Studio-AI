@@ -1,6 +1,6 @@
 import React, { useState, useRef, useMemo, useEffect } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { Loader2, ArrowRight, ChevronRight, Download, PanelLeftClose, PanelLeftOpen, Wand2, SlidersHorizontal, Sparkles, Clapperboard, Film, History, X } from 'lucide-react';
+import { Loader2, ArrowRight, ChevronRight, Download, Wand2, SlidersHorizontal, Sparkles, Clapperboard, Film, History, X } from 'lucide-react';
 import { PRODUCTS, ATMOSPHERES, MediaSelection } from './data.js';
 import { ImageUploader } from './components/ImageUploader.js';
 import { VideoOutput } from './components/VideoOutput.js';
@@ -443,18 +443,9 @@ export default function App() {
           </span>
           )}
           {page === 'studio' && <span className="hidden sm:block h-5 w-px bg-zinc-800" />}
-          {/* Desktop panel toggles live in the header — one per sidebar */}
+          {/* The builder toggle now lives in the nav rail; only the
+              post-production toggle stays in the header. */}
           {page === 'studio' && (<>
-          <button
-            id="left-panel-toggle"
-            onClick={() => setSidebarOpen(o => !o)}
-            aria-pressed={sidebarOpen}
-            aria-label={sidebarOpen ? 'Collapse builder panel' : 'Expand builder panel'}
-            title={sidebarOpen ? 'Collapse builder panel' : 'Expand builder panel'}
-            className="hidden md:flex w-8 h-8 items-center justify-center rounded-lg border border-zinc-700 bg-zinc-800 text-zinc-300 hover:text-white hover:bg-zinc-700 transition-colors"
-          >
-            <PanelLeftClose className={`w-4 h-4 transition-transform duration-300 ${sidebarOpen ? '' : 'rotate-180'}`} />
-          </button>
           <button
             id="right-panel-toggle"
             onClick={() => setPostOpen(o => !o)}
@@ -477,7 +468,12 @@ export default function App() {
       <div className="flex-1 flex flex-col md:flex-row md:min-h-0 md:overflow-hidden">
 
         {/* APP NAVIGATION — switch between the builder, the media library and renders */}
-        <AppSidebar page={page} onNavigate={handleNavigate} renderCount={versions.length} />
+        <AppSidebar
+          page={page}
+          onNavigate={handleNavigate}
+          renderCount={versions.length}
+          builder={page === 'studio' ? { open: sidebarOpen, onToggle: () => setSidebarOpen(o => !o) } : undefined}
+        />
 
         {page === 'studio' ? (
         <>
@@ -491,25 +487,16 @@ export default function App() {
               : 'md:w-[56px] p-6 md:py-8 md:px-0 md:overflow-hidden'
           }`}
         >
-          {/* Collapsed rail (desktop) — vertical branding + expand button */}
+          {/* Collapsed rail (desktop) — vertical branding only. The expand
+              control lives in the nav rail, next to the other icon buttons. */}
           {!sidebarOpen && (
-            <div className="hidden md:flex flex-col items-center gap-4 h-full">
-              <button
-                id="sidebar-rail-expand"
-                onClick={() => setSidebarOpen(true)}
-                aria-label="Expand builder panel"
-                title="Expand panel"
-                className="w-9 h-9 flex items-center justify-center rounded-xl border border-zinc-700 bg-zinc-800 text-zinc-400 hover:text-white hover:bg-zinc-700 transition-all shrink-0"
-              >
-                <PanelLeftOpen className="w-4 h-4" />
-              </button>
-              <div className="flex-1 flex flex-col items-center gap-5 mt-4 text-zinc-500">
+            <div className="hidden md:flex flex-col items-center gap-4 h-full pt-1">
+              <div className="flex-1 flex flex-col items-center gap-5 text-zinc-500">
                 <span className="text-[11px] font-medium uppercase tracking-[0.25em] [writing-mode:vertical-rl] rotate-180 whitespace-nowrap select-none">
                   Omni Studio
                 </span>
                 <Wand2 className="w-4 h-4 text-zinc-600" />
               </div>
-              <span className="text-[10px] text-zinc-600 pb-1 select-none">v1.1</span>
             </div>
           )}
 

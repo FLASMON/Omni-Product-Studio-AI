@@ -177,10 +177,11 @@ export function PostPanel({ grades, onChange, videoReady, previewSrc }: VideoPos
         </button>
       </div>
 
-      {/* CONTROLS */}
-      <div className="flex-1 min-h-0 px-5 md:px-6 py-5 space-y-6 md:overflow-y-auto thin-scrollbar">
+      {/* CONTROLS — one scroll container on every layout (the mobile sheet has
+          its own fixed height, so it needs to scroll there too). */}
+      <div className="flex-1 min-h-0 overflow-y-auto thin-scrollbar">
         {!videoReady && (
-          <div className="flex items-start gap-2.5 rounded-xl border border-zinc-800 bg-zinc-950/60 px-3.5 py-3">
+          <div className="mx-5 mt-5 flex items-start gap-2.5 rounded-xl border border-zinc-800 bg-zinc-950/60 px-3.5 py-3 md:mx-6">
             <Clapperboard className="w-4 h-4 mt-0.5 shrink-0 text-zinc-500" />
             <p className="text-[11px] leading-relaxed text-zinc-500">
               Render a video to preview your grade live — adjustments apply instantly to the player and thumbnails.
@@ -188,8 +189,10 @@ export function PostPanel({ grades, onChange, videoReady, previewSrc }: VideoPos
           </div>
         )}
 
-        {/* VIDEO FILTERS — the full look gallery */}
+        {/* VIDEO FILTERS — the full look gallery. Header and category chips stay
+            pinned to the top while the looks scroll underneath. */}
         <section>
+          <div className="sticky top-0 z-20 border-b border-zinc-800/80 bg-zinc-900/95 px-5 pb-3 pt-5 backdrop-blur md:px-6">
           <div className="flex items-center justify-between gap-3 mb-3">
             <div className="flex items-center gap-2.5 min-w-0">
               <span className="grid h-8 w-8 shrink-0 place-items-center rounded-lg border border-zinc-700 bg-zinc-800">
@@ -206,7 +209,7 @@ export function PostPanel({ grades, onChange, videoReady, previewSrc }: VideoPos
           </div>
 
           {/* Category chips */}
-          <div className="hide-scrollbar -mx-1 mb-3 flex gap-1.5 overflow-x-auto px-1">
+          <div className="hide-scrollbar -mx-1 flex gap-1.5 overflow-x-auto px-1">
             {['All', ...FILTER_CATEGORIES].map((cat) => {
               const active = cat === category;
               return (
@@ -225,9 +228,10 @@ export function PostPanel({ grades, onChange, videoReady, previewSrc }: VideoPos
               );
             })}
           </div>
+          </div>
 
           {/* Tile grid — each thumb previews the look on the current frame */}
-          <div className="grid grid-cols-2 gap-2">
+          <div className="grid grid-cols-2 gap-2 px-5 pt-4 md:px-6">
             {tiles.map(({ look, css }) => (
               <FilterTile
                 key={look.id}
@@ -240,7 +244,7 @@ export function PostPanel({ grades, onChange, videoReady, previewSrc }: VideoPos
             ))}
           </div>
 
-          <div className="mt-3 flex items-center justify-between text-[10px]">
+          <div className="mx-5 mt-3 flex items-center justify-between text-[10px] md:mx-6">
             <span className="text-zinc-500">
               {activeLook ? activeLook.label : grades.filter === 'custom' ? 'Custom grade' : 'No filter'}
             </span>
@@ -253,7 +257,7 @@ export function PostPanel({ grades, onChange, videoReady, previewSrc }: VideoPos
         </section>
 
         {/* LIGHTING */}
-        <section>
+        <section className="px-5 pt-6 md:px-6">
           <SectionLabel icon={<Sun className="w-3.5 h-3.5" />} title="Lighting" />
           <div className="space-y-4">
             <GradeSlider label="Exposure" value={grades.exposure} onChange={set('exposure')} />
@@ -262,7 +266,7 @@ export function PostPanel({ grades, onChange, videoReady, previewSrc }: VideoPos
         </section>
 
         {/* COLOR CORRECTION */}
-        <section>
+        <section className="px-5 pb-5 pt-6 md:px-6">
           <SectionLabel icon={<Droplets className="w-3.5 h-3.5" />} title="Color Correction" />
           <div className="space-y-4">
             <GradeSlider label="Saturation" value={grades.saturation} onChange={set('saturation')} />

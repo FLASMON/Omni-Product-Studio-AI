@@ -1,5 +1,13 @@
 import React from 'react';
-import { Clapperboard, CircleHelp, Film, History, Wand2, type LucideIcon } from 'lucide-react';
+import {
+  CircleHelp,
+  Film,
+  History,
+  PanelLeftClose,
+  PanelLeftOpen,
+  Wand2,
+  type LucideIcon,
+} from 'lucide-react';
 
 export type AppPage = 'studio' | 'media' | 'renders';
 
@@ -21,6 +29,8 @@ interface AppSidebarProps {
   onNavigate: (page: AppPage) => void;
   /** Number of rendered versions available in the Renders tab. */
   renderCount: number;
+  /** Builder panel state — the rail carries its collapse/expand control. */
+  builder?: { open: boolean; onToggle: () => void };
 }
 
 function Badge({ count }: { count: number }) {
@@ -35,7 +45,7 @@ function Badge({ count }: { count: number }) {
  * Vertical icon rail (desktop) / horizontal icon strip (mobile) that switches
  * between the app's top-level pages. Icons only, with a floating label on hover.
  */
-export function AppSidebar({ page, onNavigate, renderCount }: AppSidebarProps) {
+export function AppSidebar({ page, onNavigate, renderCount, builder }: AppSidebarProps) {
   const items = NAV.map((entry) => ({
     ...entry,
     badge: entry.id === 'renders' ? renderCount : 0,
@@ -49,10 +59,32 @@ export function AppSidebar({ page, onNavigate, renderCount }: AppSidebarProps) {
         aria-label="Primary"
         className="hidden md:flex md:w-[76px] md:shrink-0 flex-col items-center gap-1.5 border-r border-zinc-800/80 bg-zinc-950/60 py-4"
       >
-        <div className="grid h-10 w-10 place-items-center rounded-lg border border-zinc-700/80 bg-gradient-to-br from-zinc-800 to-zinc-900 shadow-lg shadow-black/40">
-          <Clapperboard className="h-[18px] w-[18px] text-zinc-100" />
-        </div>
-        <span className="mb-3 mt-3 select-none text-[9px] font-semibold uppercase tracking-[0.22em] text-zinc-600">
+        {/* Builder panel toggle — lives in the rail, not the header */}
+        {builder && (
+          <div className="group relative mb-1">
+            <button
+              id="left-panel-toggle"
+              type="button"
+              onClick={builder.onToggle}
+              aria-pressed={builder.open}
+              aria-label={builder.open ? 'Collapse builder panel' : 'Expand builder panel'}
+              className="grid h-11 w-11 place-items-center rounded-lg border border-zinc-700 bg-zinc-800 text-zinc-300 transition-all duration-200 hover:bg-zinc-700 hover:text-white active:scale-95"
+            >
+              <PanelLeftClose
+                className={`h-[18px] w-[18px] transition-transform duration-300 ${builder.open ? '' : 'rotate-180'}`}
+              />
+            </button>
+            <span
+              role="tooltip"
+              className="pointer-events-none absolute left-full top-1/2 z-40 ml-3 flex -translate-y-1/2 -translate-x-1 items-center gap-2 whitespace-nowrap rounded-xl border border-zinc-700/80 bg-zinc-900/95 px-3 py-1.5 text-xs font-medium text-zinc-100 opacity-0 shadow-xl shadow-black/60 backdrop-blur transition-all duration-150 group-hover:translate-x-0 group-hover:opacity-100"
+            >
+              {builder.open ? 'Collapse' : 'Expand'}
+              <span className="text-[10px] font-normal text-zinc-500">Builder panel</span>
+            </span>
+          </div>
+        )}
+
+        <span className="mb-3 mt-2 select-none text-[9px] font-semibold uppercase tracking-[0.22em] text-zinc-600">
           Menu
         </span>
 
