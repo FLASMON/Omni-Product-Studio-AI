@@ -51,18 +51,23 @@ export function VideoOutput({
   const recentLogs = logs.slice(-6);
   const hasError = lastLog?.type === 'error';
   const readyToGenerate = hasProduct && hasAtmosphere;
+  // The idle viewport is deliberately frameless: no card, no border — the page
+  // backdrop itself is the stage, with everything centred on both axes.
+  const idle = !generating && appState !== 'VIDEO_READY' && !hasError;
 
   return (
     <div
       id="video-viewport-container"
-      className={`w-full relative flex items-center justify-center transition-all duration-300 rounded-2xl border ${
+      className={`w-full relative flex items-center justify-center transition-all duration-300 ${
         hasError
-          ? 'min-h-[260px] h-auto py-8 px-6 border-red-900/60 bg-zinc-950 shadow-2xl shadow-black/50'
-          : 'aspect-video overflow-hidden border-zinc-800 bg-zinc-950 shadow-2xl shadow-black/50'
+          ? 'min-h-[260px] h-auto py-8 px-6 rounded-2xl border border-red-900/60 bg-zinc-950 shadow-2xl shadow-black/50'
+          : idle
+          ? 'min-h-[420px] md:h-full md:min-h-0'
+          : 'aspect-video overflow-hidden rounded-2xl border border-zinc-800 bg-zinc-950 shadow-2xl shadow-black/50'
       }`}
     >
       {/* HUD CORNER BRACKETS FOR CINEMATIC STUDIO LOOK */}
-      {!hasError && (
+      {!hasError && !idle && (
         <>
           <div className="absolute top-3 left-3 w-3.5 h-3.5 border-t-2 border-l-2 border-white/20 rounded-tl-sm pointer-events-none transition-colors duration-500" />
           <div className="absolute top-3 right-3 w-3.5 h-3.5 border-t-2 border-r-2 border-white/20 rounded-tr-sm pointer-events-none transition-colors duration-500" />
@@ -155,50 +160,56 @@ export function VideoOutput({
           </div>
         </div>
       ) : (
-        /* EMPTY STATE / AWAITING RENDER VIEWPORT */
-        <div id="empty-state-viewport" className="flex flex-col items-center justify-center text-center px-6 w-full max-w-lg relative z-10 py-6">
-          {/* Top HUD indicator */}
-          <div className="flex flex-wrap items-center justify-center gap-3 mb-6 text-[10px] font-mono tracking-widest text-zinc-500 uppercase">
-            <span className="flex items-center gap-1.5">
-              <span className={`w-2 h-2 rounded-full ${readyToGenerate ? 'bg-emerald-400 animate-pulse' : 'bg-zinc-600'}`} />
-              {readyToGenerate ? 'STANDBY • READY' : 'INPUTS PENDING'}
+        /* EMPTY STATE / AWAITING RENDER VIEWPORT — frameless, centred, calm */
+        <div id="empty-state-viewport" className="relative z-10 flex w-full max-w-xl flex-col items-center justify-center px-6 py-10 text-center">
+          {/* Ambient light behind the whole block */}
+          <div className="pointer-events-none absolute inset-0 -z-10 bg-[radial-gradient(ellipse_at_center,rgba(255,255,255,0.07),transparent_68%)]" />
+
+          {/* Status line */}
+          <div className="mb-9 flex flex-wrap items-center justify-center gap-x-3 gap-y-2 text-[10px] uppercase tracking-[0.28em] text-zinc-600">
+            <span className="flex items-center gap-2">
+              <span className={`h-1.5 w-1.5 rounded-full ${readyToGenerate ? 'bg-emerald-400 animate-pulse' : 'bg-zinc-700'}`} />
+              {readyToGenerate ? 'Standby · ready' : 'Inputs pending'}
             </span>
-            <span className="text-zinc-700">|</span>
-            <span>16:9 • 1080P</span>
-            <span className="text-zinc-700">|</span>
-            <span>00:00:00:00</span>
+            <span className="text-zinc-800">/</span>
+            <span>16:9</span>
+            <span className="text-zinc-800">/</span>
+            <span>1080p</span>
           </div>
 
-          {/* Central camera / film aperture badge */}
-          <div className="w-16 h-16 rounded-2xl bg-white/[0.04] border border-white/10 flex items-center justify-center shadow-lg shadow-black/40 mb-5">
-            <Film className="w-7 h-7 text-zinc-400" />
+          {/* Aperture badge with a soft halo */}
+          <div className="relative mb-8">
+            <span
+              className={`absolute -inset-3 rounded-full blur-2xl transition-colors duration-500 ${
+                readyToGenerate ? 'bg-emerald-400/15' : 'bg-white/[0.05]'
+              }`}
+            />
+            <span className="relative grid h-20 w-20 place-items-center rounded-full border border-white/10 bg-white/[0.03]">
+              <Film className="h-8 w-8 text-zinc-400" />
+            </span>
           </div>
 
-          <h3 className="font-mono text-sm uppercase tracking-wider text-zinc-100 font-bold mb-2">
-            Cinematic Viewport
+          <h3 className="text-xl font-semibold tracking-tight text-white md:text-2xl">
+            Your stage is empty
           </h3>
-          <p className="font-mono text-xs text-zinc-400 leading-relaxed max-w-sm mb-7">
-            Configure your product reference photo and atmosphere in the left builder panel to generate your video sequence.
+          <p className="mt-2.5 max-w-md text-sm leading-relaxed text-zinc-400">
+            Add a product reference and an atmosphere in the builder, then generate — your cinematic render lands right here.
           </p>
 
-          {/* Dynamic input checklist */}
-          <div className="flex flex-wrap items-center justify-center gap-2 mb-2">
-            <div className={`flex items-center gap-1.5 px-3.5 py-1.5 rounded-full border text-[11px] font-mono transition-all ${
-              hasProduct
-                ? 'bg-emerald-500/10 border-emerald-500/30 text-emerald-300'
-                : 'bg-white/[0.03] border-zinc-800 text-zinc-500'
+          {/* Input checklist — soft filled chips, no outlines */}
+          <div className="mt-8 flex flex-wrap items-center justify-center gap-2.5">
+            <div className={`flex items-center gap-2 rounded-full px-4 py-2 text-[11px] font-medium transition-all duration-300 ${
+              hasProduct ? 'bg-emerald-500/[0.12] text-emerald-300' : 'bg-white/[0.04] text-zinc-500'
             }`}>
-              {hasProduct ? <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400" /> : <Circle className="w-3.5 h-3.5 text-zinc-600" />}
-              <span>Product Image</span>
+              {hasProduct ? <CheckCircle2 className="h-3.5 w-3.5" /> : <Circle className="h-3.5 w-3.5 text-zinc-600" />}
+              <span>Product reference</span>
             </div>
 
-            <div className={`flex items-center gap-1.5 px-3.5 py-1.5 rounded-full border text-[11px] font-mono transition-all ${
-              hasAtmosphere
-                ? 'bg-emerald-500/10 border-emerald-500/30 text-emerald-300'
-                : 'bg-white/[0.03] border-zinc-800 text-zinc-500'
+            <div className={`flex items-center gap-2 rounded-full px-4 py-2 text-[11px] font-medium transition-all duration-300 ${
+              hasAtmosphere ? 'bg-emerald-500/[0.12] text-emerald-300' : 'bg-white/[0.04] text-zinc-500'
             }`}>
-              {hasAtmosphere ? <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400" /> : <Circle className="w-3.5 h-3.5 text-zinc-600" />}
-              <span>Atmosphere Scene</span>
+              {hasAtmosphere ? <CheckCircle2 className="h-3.5 w-3.5" /> : <Circle className="h-3.5 w-3.5 text-zinc-600" />}
+              <span>Atmosphere scene</span>
             </div>
           </div>
 

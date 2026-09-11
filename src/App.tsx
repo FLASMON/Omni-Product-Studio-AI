@@ -1,11 +1,16 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useMemo, useEffect } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { Loader2, ArrowRight, ChevronRight, Download, PanelLeftClose, PanelLeftOpen, Wand2, SlidersHorizontal, Sparkles, Clapperboard } from 'lucide-react';
+import { Loader2, ArrowRight, ChevronRight, Download, PanelLeftClose, PanelLeftOpen, Wand2, SlidersHorizontal, Sparkles, Clapperboard, Film, History, X } from 'lucide-react';
 import { PRODUCTS, ATMOSPHERES, MediaSelection } from './data.js';
 import { ImageUploader } from './components/ImageUploader.js';
 import { VideoOutput } from './components/VideoOutput.js';
 import { ScrollRow } from './components/ScrollRow.js';
-import { PostPanel, VideoGrades, DEFAULT_GRADES, buildGradeFilter } from './components/PostPanel.js';
+import { PostPanel } from './components/PostPanel.js';
+import { VideoGrades, DEFAULT_GRADES, buildGradeFilter } from './filters.js';
+import { captureVideoFrame } from './videoFrame.js';
+import { AppSidebar, PageHeading, AppPage } from './components/AppSidebar.js';
+import { MediaLibrary, LibraryItem, LibraryAction } from './components/MediaLibrary.js';
+import { STOCK_VIDEOS, STOCK_CATEGORY_LABEL, FILTER_PREVIEW_STILL } from './stockVideos.js';
 import { toInlineImages, InlineImage } from './images.js';
 
 type LogType = 'info' | 'success' | 'warn' | 'error';
@@ -18,10 +23,20 @@ interface VideoVersion {
   prompt: string;         // the cinematic directive (V1) or the edit instructions
 }
 
+// Label shown next to the brand in the header for the active page.
+const PAGE_TITLE: Record<AppPage, string> = {
+  studio: 'Studio',
+  media: 'Media Library',
+  renders: 'Renders',
+};
+
 export default function App() {
+  // Top-level page: the builder, the stock media library, or this session's renders.
+  const [page, setPage] = useState<AppPage>('studio');
+
   const [product, setProduct] = useState<MediaSelection | null>(null);
   const [atmosphere, setAtmosphere] = useState<MediaSelection | null>(null);
-  const [appState, setAppState] = useState<AppState>('IDLE');
+  const [appState, setAppState] = useState<AppState>('VIDEO_READY');
   const [submittedImages, setSubmittedImages] = useState<string[]>([]);
 
   // "Generate your own atmosphere": a setting the user types instead of picking
@@ -30,8 +45,8 @@ export default function App() {
   const [generateOpen, setGenerateOpen] = useState(false);
   const [generatePrompt, setGeneratePrompt] = useState('');
 
-  const [versions, setVersions] = useState<VideoVersion[]>([]);
-  const [selectedLabel, setSelectedLabel] = useState<string | null>(null);
+  const [versions, setVersions] = useState<VideoVersion[]>([{ label: 'V1', interactionId: 'demo', videoUrl: 'https://assets.mixkit.co/videos/44119/44119-720.mp4', prompt: 'TEMP VERIFY ONLY' }]);
+  const [selectedLabel, setSelectedLabel] = useState<string | null>('V1');
   const versionCount = useRef(0);
 
   const [editOpen, setEditOpen] = useState(false);
@@ -48,6 +63,13 @@ export default function App() {
   // Live video grade — lighting, color correction and filter presets. Pure
   // client-side CSS filters; the underlying renders are never modified.
   const [grades, setGrades] = useState<VideoGrades>({ ...DEFAULT_GRADES });
+
+  // A still from the current render, used to preview every filter look. Until a
+  // video exists the panel previews the looks on a license-free stock still.
+  const [filterPreview, setFilterPreview] = useState<string | null>(null);
+
+  // Mobile-only bottom sheet holding the grade + filter panel.
+  const [sheetOpen, setSheetOpen] = useState(false);
 
   const [logs, setLogs] = useState<{ id: string; timestamp: string; message: string; type: LogType; image?: string }[]>([]);
 
@@ -92,9 +114,101 @@ export default function App() {
     ? 'Add an atmosphere to start'
     : undefined;
 
+  // Nothing rendered and nothing broken yet → the frameless empty stage.
+  const idleStage = appState === 'IDLE' && logs[logs.length - 1]?.type !== 'error';
+
   const selected = versions.find(v => v.label === selectedLabel) ?? null;
   const otherVersions = versions.filter(v => v.label !== selectedLabel);
   const gradeFilter = buildGradeFilter(grades);
+
+  // Keep the filter thumbnails showing the footage they will actually grade.
+  const selectedUrl = selected?.videoUrl ?? null;
+  useEffect(() => {
+    if (!selectedUrl) {
+      setFilterPreview(null);
+      return;
+    }
+    let cancelled = false;
+    captureVideoFrame(selectedUrl)
+      .then(frame => { if (!cancelled) setFilterPreview(frame); })
+      .catch(() => { if (!cancelled) setFilterPreview(null); });
+    return () => { cancelled = true; };
+  }, [selectedUrl]);
+
+  // Lock the page behind the mobile grade sheet.
+  useEffect(() => {
+    if (!sheetOpen) return;
+    const previous = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+    return () => { document.body.style.overflow = previous; };
+  }, [sheetOpen]);
+
+  // ── Media library sources ────────────────────────────────────────────────
+  // The curated stock footage, normalised into the library card shape.
+  const stockItems: LibraryItem[] = useMemo(
+    () =>
+      STOCK_VIDEOS.map(v => ({
+        id: `stock-${v.id}`,
+        title: v.title,
+        subtitle: v.tags.join(' · '),
+        category: STOCK_CATEGORY_LABEL[v.category],
+        keywords: v.tags,
+        poster: v.poster,
+        src: v.src,
+        downloadUrl: v.download,
+        badge: v.res,
+      })),
+    [],
+  );
+
+  // Everything rendered this session, carrying the live post-production grade.
+  const renderItems: LibraryItem[] = useMemo(
+    () =>
+      versions.map(v => ({
+        id: `render-${v.label}`,
+        title: `Version ${v.label.replace(/^V/, '')}`,
+        subtitle: v.prompt.replace(/\s+/g, ' ').trim().slice(0, 140) + (v.prompt.length > 140 ? '…' : ''),
+        category: 'My renders',
+        keywords: ['render', 'omni', v.label, 'commercial'],
+        src: v.videoUrl,
+        badge: v.label,
+        filter: gradeFilter || undefined,
+        preload: 'metadata' as const,
+      })),
+    [versions, gradeFilter],
+  );
+
+  const renderActions = (item: LibraryItem): LibraryAction[] => {
+    const version = versions.find(v => v.label === item.badge);
+    if (!version) return [];
+    return [
+      {
+        label: 'Open in Studio',
+        icon: <Wand2 className="w-3.5 h-3.5" />,
+        primary: true,
+        onClick: () => {
+          selectVersion(version.label);
+          setPage('studio');
+        },
+      },
+      {
+        label: downloading ? 'Downloading…' : 'Download',
+        icon: downloading ? (
+          <Loader2 className="w-3.5 h-3.5 animate-spin" />
+        ) : (
+          <Download className="w-3.5 h-3.5" />
+        ),
+        onClick: () => downloadVideo(version),
+      },
+    ];
+  };
+
+  const handleNavigate = (next: AppPage) => {
+    setPage(next);
+    setEditOpen(false);
+    setPromptOpen(false);
+    setSheetOpen(false);
+  };
 
   const addVersion = (interactionId: string, fileId: string, promptText: string) => {
     const label = `V${++versionCount.current}`;
@@ -304,6 +418,10 @@ export default function App() {
             </h1>
             <p className="text-[10px] text-zinc-400 truncate">Cinematic AI commercial suite</p>
           </div>
+          {/* Breadcrumb-ish page label */}
+          <span className="hidden sm:inline-flex items-center gap-1.5 min-w-0 ml-1 pl-3 border-l border-zinc-800">
+            <span className="text-xs font-medium text-zinc-300 truncate">{PAGE_TITLE[page]}</span>
+          </span>
           <span className="hidden lg:inline-flex ml-2 items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-medium tracking-wide text-zinc-300 bg-zinc-800 border border-zinc-700 uppercase">
             <span className="relative flex w-1.5 h-1.5">
               <span className="absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-60 animate-ping" />
@@ -314,6 +432,7 @@ export default function App() {
         </div>
 
         <div className="flex items-center gap-2">
+          {page === 'studio' && (
           <span className={`hidden md:inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-medium border ${
             canSubmit ? 'text-emerald-300 bg-emerald-500/10 border-emerald-500/30'
             : isGenerating ? 'text-amber-300 bg-amber-500/10 border-amber-500/30'
@@ -322,8 +441,10 @@ export default function App() {
             {isGenerating ? <Loader2 className="w-3 h-3 animate-spin" /> : <Sparkles className="w-3 h-3" />}
             {isGenerating ? 'Rendering' : canSubmit ? 'Ready' : 'Awaiting inputs'}
           </span>
-          <span className="hidden sm:block h-5 w-px bg-zinc-800" />
+          )}
+          {page === 'studio' && <span className="hidden sm:block h-5 w-px bg-zinc-800" />}
           {/* Desktop panel toggles live in the header — one per sidebar */}
+          {page === 'studio' && (<>
           <button
             id="left-panel-toggle"
             onClick={() => setSidebarOpen(o => !o)}
@@ -348,11 +469,18 @@ export default function App() {
           >
             <SlidersHorizontal className="w-4 h-4" />
           </button>
+          </>)}
         </div>
       </header>
 
       {/* MAIN */}
-      <div className="flex-1 flex flex-col md:flex-row md:overflow-hidden">
+      <div className="flex-1 flex flex-col md:flex-row md:min-h-0 md:overflow-hidden">
+
+        {/* APP NAVIGATION — switch between the builder, the media library and renders */}
+        <AppSidebar page={page} onNavigate={handleNavigate} renderCount={versions.length} />
+
+        {page === 'studio' ? (
+        <>
 
         {/* LEFT - BUILDER */}
         <div
@@ -461,7 +589,7 @@ export default function App() {
         </div>
 
         {/* CENTER - OUTPUT */}
-        <div className="w-full md:flex-1 p-6 md:p-8 min-h-[50vh] md:min-h-0 md:overflow-y-auto thin-scrollbar grid-backdrop">
+        <div className="w-full md:flex-1 p-6 md:p-8 min-h-[50vh] md:min-h-0 md:overflow-y-auto thin-scrollbar grid-backdrop md:flex md:flex-col">
 
           {/* Every row shares a left gutter so the version thumbnails, the main
               video, the input carousel and the prompt all line up on one edge —
@@ -490,7 +618,9 @@ export default function App() {
           )}
 
           {/* MAIN: version label + EDIT in the gutter, video/loading aligned with the rest */}
-          <div className="flex gap-3 md:gap-4">
+          {/* When nothing has been rendered yet the row grows to fill the column,
+              which is what centres the empty stage on both axes. */}
+          <div className={`flex gap-3 md:gap-4 ${idleStage ? 'md:flex-1 md:min-h-0' : ''}`}>
             <div className="flex-none w-12 pt-1">
               {appState === 'VIDEO_READY' && selected && (
                 <div className="flex flex-col gap-2">
@@ -518,7 +648,7 @@ export default function App() {
                 </div>
               )}
             </div>
-            <div className="flex-1 min-w-0">
+            <div className={`flex-1 min-w-0 ${idleStage ? 'md:h-full' : ''}`}>
               <VideoOutput
                 appState={appState}
                 videoUrl={selected?.videoUrl ?? null}
@@ -527,6 +657,20 @@ export default function App() {
                 hasAtmosphere={hasAtmosphere}
                 gradeFilter={gradeFilter}
               />
+
+              {/* Mobile: the post-production panel slides up on demand once a
+                  render exists (desktop keeps the docked panel). */}
+              {appState === 'VIDEO_READY' && selected && (
+                <button
+                  type="button"
+                  id="mobile-grade-btn"
+                  onClick={() => setSheetOpen(true)}
+                  className="md:hidden mt-3 inline-flex w-full items-center justify-center gap-2 rounded-xl border border-zinc-700 bg-zinc-900 px-4 py-3 text-xs font-semibold text-zinc-100 active:scale-[0.98]"
+                >
+                  <SlidersHorizontal className="h-3.5 w-3.5" />
+                  Grade & Filters
+                </button>
+              )}
             </div>
           </div>
 
@@ -618,10 +762,107 @@ export default function App() {
           }`}
         >
           <div className={postOpen ? 'w-[320px] h-full min-h-0' : 'w-0 h-full min-h-0'}>
-            <PostPanel grades={grades} onChange={setGrades} videoReady={appState === 'VIDEO_READY' && !!selected} />
+            <PostPanel
+              grades={grades}
+              onChange={setGrades}
+              videoReady={appState === 'VIDEO_READY' && !!selected}
+              previewSrc={filterPreview ?? FILTER_PREVIEW_STILL}
+            />
           </div>
         </aside>
+
+        </>
+        ) : page === 'media' ? (
+          <MediaLibrary
+            key="library-media"
+            items={stockItems}
+            emptyTitle="No clips match your filters"
+            emptyBody="Try another category, or clear the search to browse the full stock library again."
+          >
+            <PageHeading
+              icon={Film}
+              title="Media Library"
+              subtitle="License-free stock footage — hover a card to play it, click to enlarge."
+            >
+              <span className="rounded-full border border-zinc-800 bg-zinc-900/70 px-3 py-1.5 text-[10px] font-medium uppercase tracking-wider text-zinc-400">
+                {STOCK_VIDEOS.length} clips · Mixkit Free License
+              </span>
+            </PageHeading>
+          </MediaLibrary>
+        ) : (
+          <MediaLibrary
+            key="library-renders"
+            items={renderItems}
+            emptyTitle="No renders yet"
+            emptyBody="Pick a product and an atmosphere in the Studio, then generate your first cinematic shot — every version lands here."
+            getActions={renderActions}
+            noun="render"
+          >
+            <PageHeading
+              icon={History}
+              title="Renders"
+              subtitle="Every version generated this session, shown with the live post-production grade."
+            >
+              <button
+                type="button"
+                onClick={() => setPage('studio')}
+                className="inline-flex items-center gap-2 rounded-xl border border-white bg-white px-4 py-2 text-xs font-semibold text-zinc-950 transition-colors hover:bg-zinc-100 active:scale-[0.98]"
+              >
+                <Wand2 className="w-3.5 h-3.5" />
+                Open Studio
+              </button>
+            </PageHeading>
+          </MediaLibrary>
+        )}
       </div>
+
+      {/* MOBILE GRADE SHEET — the post-production panel on demand */}
+      <AnimatePresence>
+        {sheetOpen && (
+          <motion.div
+            className="fixed inset-0 z-50 flex items-end md:hidden"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.18 }}
+          >
+            <div
+              className="absolute inset-0 bg-black/70 backdrop-blur-sm"
+              onClick={() => setSheetOpen(false)}
+            />
+            <motion.div
+              role="dialog"
+              aria-modal="true"
+              aria-label="Grade and filters"
+              initial={{ y: '8%' }}
+              animate={{ y: 0 }}
+              exit={{ y: '8%' }}
+              transition={{ duration: 0.24, ease: [0.22, 0.61, 0.36, 1] }}
+              className="relative flex h-[86vh] w-full flex-col overflow-hidden rounded-t-3xl border-t border-zinc-700 bg-zinc-900 shadow-2xl shadow-black"
+            >
+              <div className="relative shrink-0 px-5 pb-1 pt-3">
+                <span className="mx-auto block h-1 w-10 rounded-full bg-zinc-700" />
+                <button
+                  type="button"
+                  onClick={() => setSheetOpen(false)}
+                  aria-label="Close grade panel"
+                  className="absolute right-4 top-3 grid h-8 w-8 place-items-center rounded-lg border border-zinc-800 bg-zinc-950 text-zinc-400 active:bg-zinc-800"
+                >
+                  <X className="h-4 w-4" />
+                </button>
+              </div>
+              <div className="min-h-0 flex-1">
+                <PostPanel
+                  grades={grades}
+                  onChange={setGrades}
+                  videoReady={appState === 'VIDEO_READY' && !!selected}
+                  previewSrc={filterPreview ?? FILTER_PREVIEW_STILL}
+                />
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       {/* FOOTER — Clean, modern studio bar with minimal text */}
       <footer id="studio-footer" className="shrink-0 border-t border-zinc-800 bg-zinc-900 px-6 md:px-8 py-3.5 flex flex-col sm:flex-row items-center justify-between gap-2.5 text-xs text-zinc-400">
