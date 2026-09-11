@@ -49,7 +49,7 @@ export function AppSidebar({ page, onNavigate, renderCount }: AppSidebarProps) {
         aria-label="Primary"
         className="hidden md:flex md:w-[76px] md:shrink-0 flex-col items-center gap-1.5 border-r border-zinc-800/80 bg-zinc-950/60 py-4"
       >
-        <div className="grid h-10 w-10 place-items-center rounded-2xl border border-zinc-700/80 bg-gradient-to-br from-zinc-800 to-zinc-900 shadow-lg shadow-black/40">
+        <div className="grid h-10 w-10 place-items-center rounded-lg border border-zinc-700/80 bg-gradient-to-br from-zinc-800 to-zinc-900 shadow-lg shadow-black/40">
           <Clapperboard className="h-[18px] w-[18px] text-zinc-100" />
         </div>
         <span className="mb-3 mt-3 select-none text-[9px] font-semibold uppercase tracking-[0.22em] text-zinc-600">
@@ -67,7 +67,7 @@ export function AppSidebar({ page, onNavigate, renderCount }: AppSidebarProps) {
                 onClick={() => onNavigate(item.id)}
                 aria-current={active ? 'page' : undefined}
                 aria-label={item.label}
-                className={`relative grid h-11 w-11 place-items-center rounded-2xl border transition-all duration-200 active:scale-95 ${
+                className={`relative grid h-11 w-11 place-items-center rounded-lg border transition-all duration-200 active:scale-95 ${
                   active
                     ? 'border-white/90 bg-white text-zinc-950 shadow-lg shadow-white/10'
                     : 'border-transparent text-zinc-400 hover:border-zinc-700 hover:bg-zinc-800/70 hover:text-white'
@@ -95,7 +95,7 @@ export function AppSidebar({ page, onNavigate, renderCount }: AppSidebarProps) {
             <button
               type="button"
               aria-label="Help & licensing"
-              className="grid h-11 w-11 place-items-center rounded-2xl border border-transparent text-zinc-500 transition-all duration-200 hover:border-zinc-700 hover:bg-zinc-800/70 hover:text-white"
+              className="grid h-11 w-11 place-items-center rounded-lg border border-transparent text-zinc-500 transition-all duration-200 hover:border-zinc-700 hover:bg-zinc-800/70 hover:text-white"
             >
               <CircleHelp className="h-[18px] w-[18px]" />
             </button>
@@ -126,7 +126,7 @@ export function AppSidebar({ page, onNavigate, renderCount }: AppSidebarProps) {
               type="button"
               onClick={() => onNavigate(item.id)}
               aria-current={active ? 'page' : undefined}
-              className={`relative flex flex-1 items-center justify-center gap-2 rounded-xl border px-3 py-2 text-xs font-semibold transition-all duration-200 ${
+              className={`relative flex flex-1 items-center justify-center gap-2 rounded-lg border px-3 py-2 text-xs font-semibold transition-all duration-200 ${
                 active
                   ? 'border-white/90 bg-white text-zinc-950 shadow-lg shadow-white/10'
                   : 'border-zinc-800 bg-zinc-900/60 text-zinc-400'

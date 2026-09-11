@@ -36,7 +36,7 @@ export default function App() {
 
   const [product, setProduct] = useState<MediaSelection | null>(null);
   const [atmosphere, setAtmosphere] = useState<MediaSelection | null>(null);
-  const [appState, setAppState] = useState<AppState>('VIDEO_READY');
+  const [appState, setAppState] = useState<AppState>('IDLE');
   const [submittedImages, setSubmittedImages] = useState<string[]>([]);
 
   // "Generate your own atmosphere": a setting the user types instead of picking
@@ -45,8 +45,8 @@ export default function App() {
   const [generateOpen, setGenerateOpen] = useState(false);
   const [generatePrompt, setGeneratePrompt] = useState('');
 
-  const [versions, setVersions] = useState<VideoVersion[]>([{ label: 'V1', interactionId: 'demo', videoUrl: 'https://assets.mixkit.co/videos/44119/44119-720.mp4', prompt: 'TEMP VERIFY ONLY' }]);
-  const [selectedLabel, setSelectedLabel] = useState<string | null>('V1');
+  const [versions, setVersions] = useState<VideoVersion[]>([]);
+  const [selectedLabel, setSelectedLabel] = useState<string | null>(null);
   const versionCount = useRef(0);
 
   const [editOpen, setEditOpen] = useState(false);

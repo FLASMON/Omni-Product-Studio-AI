@@ -223,12 +223,15 @@ export function MediaLibrary({
 
   return (
     <div className="min-w-0 flex-1 md:min-h-0 md:overflow-y-auto thin-scrollbar">
-      <div className="mx-auto max-w-[1600px] px-5 py-6 md:px-8 md:py-8">
+      {/* STICKY TOOLBAR — the heading, the category tabs and the search stay
+          pinned while the grid scrolls underneath. */}
+      <div className="sticky top-0 z-30 border-b border-zinc-800/70 bg-zinc-950/85 backdrop-blur-md">
+        <div className="mx-auto max-w-[1600px] px-5 pt-5 pb-2.5 md:px-8 md:pt-6 md:pb-3">
         {children}
 
         {/* SEARCH + FILTER BAR — pointless until there is something to filter */}
         {items.length > 0 && (
-        <div className="mb-5 flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
+        <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
           <div className="hide-scrollbar -mx-1 flex gap-1.5 overflow-x-auto px-1 pb-1">
             {categories.map((cat) => {
               const active = cat === category;
@@ -272,7 +275,10 @@ export function MediaLibrary({
         </div>
 
         )}
+        </div>
+      </div>
 
+      <div className="mx-auto max-w-[1600px] px-5 pt-4 pb-10 md:px-8">
         {/* RESULT COUNT */}
         {items.length > 0 && (
         <div className="mb-4 flex items-center gap-2 text-[11px] text-zinc-500">
@@ -303,12 +309,13 @@ export function MediaLibrary({
             ))}
           </div>
         ) : (
-          <div className="fade-up flex flex-col items-center justify-center rounded-2xl border border-dashed border-zinc-800 bg-zinc-900/40 px-6 py-16 text-center">
-            <span className="mb-4 grid h-14 w-14 place-items-center rounded-2xl border border-zinc-800 bg-zinc-900">
-              <Film className="h-6 w-6 text-zinc-500" />
+          <div className="fade-up relative flex min-h-[360px] flex-col items-center justify-center px-6 py-16 text-center">
+            <span className="pointer-events-none absolute inset-0 -z-10 bg-[radial-gradient(ellipse_at_center,rgba(255,255,255,0.05),transparent_68%)]" />
+            <span className="mb-5 grid h-16 w-16 place-items-center rounded-full border border-white/10 bg-white/[0.03]">
+              <Film className="h-7 w-7 text-zinc-500" />
             </span>
-            <h3 className="text-sm font-semibold text-zinc-100">{emptyTitle}</h3>
-            <p className="mt-1.5 max-w-sm text-xs leading-relaxed text-zinc-500">{emptyBody}</p>
+            <h3 className="text-base font-semibold text-zinc-100">{emptyTitle}</h3>
+            <p className="mt-2 max-w-sm text-xs leading-relaxed text-zinc-500">{emptyBody}</p>
             {(query || category !== 'All') && (
               <button
                 type="button"
