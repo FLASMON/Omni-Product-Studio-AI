@@ -1,6 +1,6 @@
 import React, { useState, useRef, useMemo, useEffect } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { Loader2, ArrowRight, ChevronRight, Download, Wand2, SlidersHorizontal, Sparkles, Clapperboard, Film, History, X, Sun, Moon } from 'lucide-react';
+import { Loader2, ArrowRight, ChevronRight, Download, Wand2, SlidersHorizontal, Sparkles, Clapperboard, Film, History, X, Sun, Moon, KeyRound } from 'lucide-react';
 import { PRODUCTS, ATMOSPHERES, MediaSelection } from './data.js';
 import { ImageUploader } from './components/ImageUploader.js';
 import { VideoOutput } from './components/VideoOutput.js';
@@ -13,6 +13,7 @@ import { Theme, readTheme, applyTheme } from './theme.js';
 import { MediaLibrary, LibraryItem, LibraryAction } from './components/MediaLibrary.js';
 import { STOCK_VIDEOS, STOCK_CATEGORY_LABEL, FILTER_PREVIEW_STILL } from './stockVideos.js';
 import { toInlineImages, InlineImage } from './images.js';
+import { NoticeBanner, NoticeCard } from './components/NoticeBanner.js';
 
 type LogType = 'info' | 'success' | 'warn' | 'error';
 type AppState = 'IDLE' | 'GENERATING_ATMOSPHERE' | 'GENERATING_PROMPT' | 'GENERATING_VIDEO' | 'VIDEO_READY';
@@ -76,6 +77,9 @@ export default function App() {
 
   // Mobile-only bottom sheet holding the grade + filter panel.
   const [sheetOpen, setSheetOpen] = useState(false);
+
+  // Billing & quota notice for Gemini Omni Flash paid tier requirement
+  const [noticeDismissed, setNoticeDismissed] = useState(false);
 
   const [logs, setLogs] = useState<{ id: string; timestamp: string; message: string; type: LogType; image?: string }[]>([]);
 
@@ -438,6 +442,20 @@ export default function App() {
         </div>
 
         <div className="flex items-center gap-2">
+          {noticeDismissed && (
+            <button
+              id="reopen-notice-btn"
+              type="button"
+              onClick={() => setNoticeDismissed(false)}
+              aria-label="View Notice"
+              title="View Gemini Omni paid tier notice"
+              className="hidden sm:inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg border border-amber-500/30 bg-amber-500/10 text-[11px] font-medium text-amber-500 dark:text-amber-300 hover:bg-amber-500/20 transition-colors"
+            >
+              <KeyRound className="w-3 h-3 text-amber-500 dark:text-amber-400" />
+              <span>Notice</span>
+            </button>
+          )}
+
           <button
             id="theme-toggle"
             type="button"
@@ -480,6 +498,11 @@ export default function App() {
           </>)}
         </div>
       </header>
+
+      {/* NOTICE BANNER — Paid tier requirement for Gemini Omni Flash */}
+      {!noticeDismissed && (
+        <NoticeBanner onDismiss={() => setNoticeDismissed(true)} />
+      )}
 
       {/* MAIN */}
       <div className="flex-1 flex flex-col md:flex-row md:min-h-0 md:overflow-hidden">
@@ -553,7 +576,8 @@ export default function App() {
 
             {/* Persistent submit — writes the prompt and renders in one go.
                 Wrapper carries the tooltip: a disabled button emits no hover events. */}
-            <div id="submit-section" className="pt-4 pb-4">
+            <div id="submit-section" className="pt-4 pb-4 space-y-3">
+              <NoticeCard compact />
               <div title={submitHint} className={submitHint ? 'cursor-not-allowed' : undefined}>
                 <button
                   id="generate-video-submit-btn"
