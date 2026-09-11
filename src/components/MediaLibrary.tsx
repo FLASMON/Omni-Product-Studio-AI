@@ -226,7 +226,7 @@ export function MediaLibrary({
       {/* STICKY TOOLBAR — the heading, the category tabs and the search stay
           pinned while the grid scrolls underneath. */}
       <div className="sticky top-0 z-30 border-b border-zinc-800/70 bg-zinc-950/85 backdrop-blur-md">
-        <div className="mx-auto max-w-[1600px] px-5 pt-5 pb-2.5 md:px-8 md:pt-6 md:pb-3">
+        <div className="mx-auto px-5 pt-5 pb-2.5 md:px-8 md:pt-6 md:pb-3">
         {children}
 
         {/* SEARCH + FILTER BAR — pointless until there is something to filter */}
@@ -278,7 +278,7 @@ export function MediaLibrary({
         </div>
       </div>
 
-      <div className="mx-auto max-w-[1600px] px-5 pt-4 pb-10 md:px-8">
+      <div className="mx-auto px-5 pt-4 pb-10 md:px-8">
         {/* RESULT COUNT */}
         {items.length > 0 && (
         <div className="mb-4 flex items-center gap-2 text-[11px] text-zinc-500">

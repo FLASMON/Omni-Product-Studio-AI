@@ -60,14 +60,16 @@ export function VideoOutput({
       id="video-viewport-container"
       className={`w-full relative flex items-center justify-center transition-all duration-300 ${
         hasError
-          ? 'min-h-[260px] h-auto py-8 px-6 rounded-2xl border border-red-900/60 bg-zinc-950 shadow-2xl shadow-black/50'
+          ? 'min-h-[260px] h-auto py-8 px-6 rounded-2xl border border-red-200 bg-zinc-950 shadow-2xl shadow-black/50 dark:border-red-900/60'
           : idle
           ? 'min-h-[420px] md:h-full md:min-h-0'
+          : generating
+          ? '' /* the pipeline is its own card, sized to its content */
           : 'aspect-video overflow-hidden rounded-2xl border border-zinc-800 bg-zinc-950 shadow-2xl shadow-black/50'
       }`}
     >
       {/* HUD CORNER BRACKETS FOR CINEMATIC STUDIO LOOK */}
-      {!hasError && !idle && (
+      {!hasError && !idle && !generating && (
         <>
           <div className="absolute top-3 left-3 w-3.5 h-3.5 border-t-2 border-l-2 border-white/20 rounded-tl-sm pointer-events-none transition-colors duration-500" />
           <div className="absolute top-3 right-3 w-3.5 h-3.5 border-t-2 border-r-2 border-white/20 rounded-tr-sm pointer-events-none transition-colors duration-500" />
@@ -93,11 +95,13 @@ export function VideoOutput({
           className="w-full h-full object-contain bg-black rounded-2xl"
         />
       ) : generating ? (
-        /* GENERATION PIPELINE VIEW */
-        <div className="absolute inset-0 flex flex-col items-center justify-center gap-4 px-6 py-8 overflow-hidden bg-zinc-950/95 backdrop-blur-md">
+        /* GENERATION PIPELINE VIEW — a card in the normal flow: the log rail
+           decides the height, so nothing is ever clipped by the player frame. */
+        <div className="relative w-full overflow-hidden rounded-2xl border border-zinc-800 bg-zinc-950 px-6 py-8 shadow-2xl shadow-black/50 md:py-10">
           {/* Soft radial glow behind the pipeline */}
           <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,rgba(230,0,35,0.05),transparent_65%)] pointer-events-none" />
 
+          <div className="relative flex min-w-0 flex-col items-center gap-4">
           {/* Spinning conic ring + breathing amber core */}
           <div className="relative shrink-0 pulse-glow rounded-full">
             <div className="w-14 h-14 rounded-full conic-spin"
@@ -120,7 +124,7 @@ export function VideoOutput({
           </div>
 
           {/* Pipeline progress rail — three stages mirror the app state */}
-          <div className="relative w-full max-w-md flex items-center gap-1.5 px-1">
+          <div className="relative flex w-full min-w-0 max-w-md items-center gap-1.5 px-1">
             {(['GENERATING_ATMOSPHERE', 'GENERATING_PROMPT', 'GENERATING_VIDEO'] as const).map((stage, i) => {
               const stageOrder = ['GENERATING_ATMOSPHERE', 'GENERATING_PROMPT', 'GENERATING_VIDEO'];
               const currentIdx = stageOrder.indexOf(appState);
@@ -141,12 +145,12 @@ export function VideoOutput({
             })}
           </div>
 
-          <div className="relative w-full max-w-md min-h-0 space-y-1.5 font-mono text-[11px] text-left p-3.5 rounded-xl bg-zinc-900/60 border border-zinc-800/80 shadow-inner">
+          <div className="relative w-full min-w-0 max-w-md max-h-72 space-y-1.5 overflow-y-auto overflow-x-hidden rounded-xl border border-zinc-800/80 bg-zinc-900/60 p-3.5 text-left font-mono text-[11px] shadow-inner thin-scrollbar">
             {recentLogs.map((log) => (
-              <div key={log.id} className={`log-enter ${logColor(log.type)}`}>
-                <div className="truncate flex items-center gap-1.5">
-                  <span className="text-zinc-600 font-bold">›</span>
-                  <span>{log.message}</span>
+              <div key={log.id} className={`log-enter min-w-0 ${logColor(log.type)}`}>
+                <div className="flex min-w-0 items-center gap-1.5">
+                  <span className="shrink-0 font-bold text-zinc-600">›</span>
+                  <span className="min-w-0 truncate">{log.message}</span>
                 </div>
                 {log.image && (
                   <img
@@ -157,6 +161,7 @@ export function VideoOutput({
                 )}
               </div>
             ))}
+          </div>
           </div>
         </div>
       ) : (
@@ -215,13 +220,13 @@ export function VideoOutput({
 
           {/* Error Banner when failure occurs */}
           {lastLog?.type === 'error' && (
-            <div id="render-error-card" className="mt-6 w-full flex items-start gap-3 rounded-xl border border-red-500/40 bg-red-950/40 px-4 py-3.5 text-left shadow-lg shadow-red-950/20">
-              <AlertTriangle className="w-4 h-4 mt-0.5 shrink-0 text-red-400" />
+            <div id="render-error-card" className="mt-6 flex w-full items-start gap-3 rounded-xl border border-red-200 bg-red-50 px-4 py-3.5 text-left shadow-lg shadow-red-950/5 dark:border-red-500/40 dark:bg-red-950/40 dark:shadow-red-950/20">
+              <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0 text-red-600 dark:text-red-400" />
               <div className="flex-1 min-w-0">
-                <span className="font-mono text-[10px] uppercase tracking-wider text-red-400 font-bold block mb-0.5">
+                <span className="mb-0.5 block font-mono text-[10px] font-bold uppercase tracking-wider text-red-600 dark:text-red-400">
                   Notice
                 </span>
-                <p className="font-mono text-xs leading-relaxed text-red-200 break-words">
+                <p className="font-mono text-xs leading-relaxed text-red-700 break-words dark:text-red-200">
                   {readableError(lastLog.message)}
                 </p>
               </div>

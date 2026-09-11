@@ -624,7 +624,7 @@ export default function App() {
           {/* MAIN: version label + EDIT in the gutter, video/loading aligned with the rest */}
           {/* When nothing has been rendered yet the row grows to fill the column,
               which is what centres the empty stage on both axes. */}
-          <div className={`flex gap-3 md:gap-4 ${idleStage ? 'md:flex-1 md:min-h-0' : ''}`}>
+          <div className={`flex gap-3 md:gap-4 ${idleStage ? 'md:flex-1 md:min-h-0' : 'md:my-auto'}`}>
             <div className="flex-none w-12 pt-1">
               {appState === 'VIDEO_READY' && selected && (
                 <div className="flex flex-col gap-2">

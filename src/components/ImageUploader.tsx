@@ -322,8 +322,8 @@ export function ImageUploader({
           </div>
 
           {error && (
-            <div className="text-xs text-red-300 bg-red-950/40 border border-red-900/60 p-3 rounded-xl flex items-start gap-2">
-              <span className="text-red-400 shrink-0">✕</span>
+            <div className="flex items-start gap-2 rounded-xl border border-red-200 bg-red-50 p-3 text-xs text-red-700 dark:border-red-900/60 dark:bg-red-950/40 dark:text-red-300">
+              <span className="shrink-0 text-red-600 dark:text-red-400">✕</span>
               <p className="leading-relaxed">{error}</p>
             </div>
           )}
