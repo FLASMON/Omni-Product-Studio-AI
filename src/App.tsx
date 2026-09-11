@@ -284,54 +284,76 @@ export default function App() {
       <div className="flex-1 flex flex-col md:flex-row md:overflow-hidden">
 
         {/* LEFT - BUILDER */}
-        <div className="w-full md:w-[480px] md:shrink-0 md:overflow-y-auto p-6 md:p-10 border-b md:border-b-0 md:border-r border-zinc-800 flex flex-col">
-          <header className="mb-10">
-            <h1 className="text-2xl md:text-3xl font-black uppercase tracking-tighter text-white whitespace-nowrap mb-2">
-              Omni <span className="text-zinc-500">Product Studio</span>
-            </h1>
-            <p className="font-mono text-xs uppercase tracking-widest text-zinc-400 leading-relaxed">
-              Turn static product images into a cinematic product shot
-            </p>
-          </header>
+        <div
+          id="studio-left-sidebar"
+          className="w-full md:w-[480px] md:shrink-0 md:overflow-y-auto p-6 md:p-8 border-b md:border-b-0 md:border-r border-zinc-800/80 bg-zinc-950/70 backdrop-blur-xl flex flex-col justify-between"
+        >
+          <div>
+            <header className="mb-8">
+              <div className="flex items-center gap-2 mb-3">
+                <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-mono tracking-widest text-zinc-400 bg-zinc-900/90 border border-zinc-800 uppercase">
+                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+                  Studio Pipeline v1.1
+                </span>
+              </div>
+              <h1 id="app-title" className="text-xl md:text-2xl font-bold tracking-tight text-white mb-2">
+                Omni <span className="text-zinc-500 font-light">Product Studio</span>
+              </h1>
+              <p className="font-mono text-xs text-zinc-400 leading-relaxed">
+                Compose, style, and render high-fidelity cinematic video commercials.
+              </p>
+            </header>
 
-          <ImageUploader
-            title="Product Images"
-            type="product"
-            suggestions={PRODUCTS}
-            selection={product}
-            onSelect={setProduct}
-            disabled={isGenerating}
-          />
+            <ImageUploader
+              title="Product Reference"
+              type="product"
+              stepNumber="01"
+              suggestions={PRODUCTS}
+              selection={product}
+              onSelect={setProduct}
+              disabled={isGenerating}
+            />
 
-          <ImageUploader
-            title="Atmospheres"
-            type="atmosphere"
-            suggestions={ATMOSPHERES}
-            selection={atmosphere}
-            onSelect={selectAtmosphere}
-            disabled={isGenerating}
-          />
+            <ImageUploader
+              title="Atmosphere & Environment"
+              type="atmosphere"
+              stepNumber="02"
+              suggestions={ATMOSPHERES}
+              selection={atmosphere}
+              onSelect={selectAtmosphere}
+              disabled={isGenerating}
+            />
+          </div>
 
           {/* Persistent submit — writes the prompt and renders in one go.
               Wrapper carries the tooltip: a disabled button emits no hover events. */}
-          <div title={submitHint} className={submitHint ? 'cursor-not-allowed' : undefined}>
-            <button
-              onClick={handleSubmit}
-              disabled={!canSubmit}
-              className="group inline-flex items-center justify-center px-8 py-4 font-mono font-bold uppercase tracking-widest text-zinc-950 bg-white hover:bg-zinc-200 transition-colors w-full disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:bg-white"
-            >
-              {isGenerating ? (
-                <>
-                  <Loader2 className="mr-3 w-5 h-5 animate-spin" />
-                  Generating…
-                </>
-              ) : (
-                <>
-                  Submit
-                  <ArrowRight className="ml-3 w-5 h-5 group-hover:translate-x-1 transition-transform" />
-                </>
-              )}
-            </button>
+          <div id="submit-section" className="pt-2 pb-4">
+            <div title={submitHint} className={submitHint ? 'cursor-not-allowed' : undefined}>
+              <button
+                id="generate-video-submit-btn"
+                onClick={handleSubmit}
+                disabled={!canSubmit}
+                className="group inline-flex items-center justify-center px-8 py-3.5 font-mono font-bold text-xs uppercase tracking-widest rounded-xl transition-all duration-200 w-full shadow-md active:scale-[0.99] disabled:opacity-40 disabled:cursor-not-allowed disabled:shadow-none bg-zinc-100 hover:bg-white text-zinc-950 disabled:bg-zinc-900/60 disabled:text-zinc-600 disabled:border disabled:border-zinc-850"
+              >
+                {isGenerating ? (
+                  <>
+                    <Loader2 className="mr-2.5 w-4 h-4 animate-spin text-zinc-950" />
+                    Generating Cinematic Shot…
+                  </>
+                ) : (
+                  <>
+                    <span>Generate Cinematic Video</span>
+                    <ArrowRight className="ml-2.5 w-4 h-4 group-hover:translate-x-1 transition-transform" />
+                  </>
+                )}
+              </button>
+            </div>
+            <div className="mt-2.5 flex items-center justify-between px-1 text-[11px] font-mono text-zinc-500">
+              <span>Pipeline Stage 03</span>
+              <span className={canSubmit ? 'text-emerald-400 font-medium' : 'text-zinc-600'}>
+                {canSubmit ? '✓ Ready to render' : submitHint || 'Inputs required'}
+              </span>
+            </div>
           </div>
         </div>
 
@@ -393,7 +415,13 @@ export default function App() {
               )}
             </div>
             <div className="flex-1 min-w-0">
-              <VideoOutput appState={appState} videoUrl={selected?.videoUrl ?? null} logs={logs} />
+              <VideoOutput
+                appState={appState}
+                videoUrl={selected?.videoUrl ?? null}
+                logs={logs}
+                hasProduct={!!product}
+                hasAtmosphere={hasAtmosphere}
+              />
             </div>
           </div>
 

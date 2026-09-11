@@ -1,5 +1,5 @@
 import React from 'react';
-import { Loader2, AlertTriangle } from 'lucide-react';
+import { Loader2, AlertTriangle, Film, CheckCircle2, Circle, Sparkles, Video, Play } from 'lucide-react';
 
 type AppState = 'IDLE' | 'GENERATING_ATMOSPHERE' | 'GENERATING_PROMPT' | 'GENERATING_VIDEO' | 'VIDEO_READY';
 type LogType = 'info' | 'success' | 'warn' | 'error';
@@ -9,11 +9,13 @@ interface VideoOutputProps {
   appState: AppState;
   videoUrl: string | null;
   logs: LogEntry[];
+  hasProduct?: boolean;
+  hasAtmosphere?: boolean;
 }
 
 const logColor = (type: LogType) =>
-  type === 'error' ? 'text-red-500' :
-  type === 'warn' ? 'text-yellow-500' :
+  type === 'error' ? 'text-red-400' :
+  type === 'warn' ? 'text-amber-400' :
   type === 'success' ? 'text-emerald-400' :
   'text-zinc-400';
 
@@ -34,20 +36,41 @@ const readableError = (raw: string): string => {
   return raw.replace(/^Error:\s*/, '').trim();
 };
 
-export function VideoOutput({ appState, videoUrl, logs }: VideoOutputProps) {
+export function VideoOutput({
+  appState,
+  videoUrl,
+  logs,
+  hasProduct = false,
+  hasAtmosphere = false,
+}: VideoOutputProps) {
   const generating = appState === 'GENERATING_ATMOSPHERE' || appState === 'GENERATING_PROMPT' || appState === 'GENERATING_VIDEO';
   const lastLog = logs[logs.length - 1];
   const recentLogs = logs.slice(-6);
   const hasError = lastLog?.type === 'error';
+  const readyToGenerate = hasProduct && hasAtmosphere;
 
   return (
-    <div className={`w-full relative flex items-center justify-center transition-all ${
-      hasError 
-        ? 'min-h-[220px] h-auto py-6 overflow-y-auto border border-zinc-800 bg-zinc-950/40 rounded-lg' 
-        : 'aspect-video overflow-hidden'
-    }`}>
+    <div
+      id="video-viewport-container"
+      className={`w-full relative flex items-center justify-center transition-all duration-300 rounded-2xl border ${
+        hasError
+          ? 'min-h-[260px] h-auto py-8 px-6 border-red-950/60 bg-zinc-950/90 shadow-2xl'
+          : 'aspect-video overflow-hidden border-zinc-800/80 bg-zinc-950/70 shadow-2xl shadow-black/50'
+      }`}
+    >
+      {/* HUD CORNER BRACKETS FOR CINEMATIC STUDIO LOOK */}
+      {!hasError && (
+        <>
+          <div className="absolute top-3 left-3 w-3 h-3 border-t border-l border-zinc-700/60 pointer-events-none" />
+          <div className="absolute top-3 right-3 w-3 h-3 border-t border-r border-zinc-700/60 pointer-events-none" />
+          <div className="absolute bottom-3 left-3 w-3 h-3 border-b border-l border-zinc-700/60 pointer-events-none" />
+          <div className="absolute bottom-3 right-3 w-3 h-3 border-b border-r border-zinc-700/60 pointer-events-none" />
+        </>
+      )}
+
       {appState === 'VIDEO_READY' && videoUrl ? (
         <video
+          id="rendered-video-player"
           // Omni always returns audio and offers no way to disable it; mute on
           // playback. Set via ref too — React's `muted` prop alone is unreliable.
           ref={(el) => { if (el) el.muted = true; }}
@@ -58,28 +81,37 @@ export function VideoOutput({ appState, videoUrl, logs }: VideoOutputProps) {
           loop
           playsInline
           muted
-          className="w-full h-full object-contain bg-black"
+          className="w-full h-full object-contain bg-black rounded-2xl"
         />
       ) : generating ? (
-        // absolute inset-0 + justify-center keeps the spinner, label and ticker
-        // together as one centered group (a flex *item* here collapses to ~0
-        // width, clamping logs and the image). overflow-hidden clips gracefully
-        // if a tall image + logs ever exceed a short frame.
-        <div className="absolute inset-0 flex flex-col items-center justify-center gap-3 px-6 py-6 overflow-hidden">
-          <Loader2 className="w-9 h-9 text-zinc-500 animate-spin shrink-0" />
-          <div className="font-mono text-sm uppercase tracking-widest text-white shrink-0">
-            {appState === 'GENERATING_ATMOSPHERE' ? 'Generating atmosphere' : appState === 'GENERATING_PROMPT' ? 'Writing prompt' : 'Rendering'}
+        /* GENERATION PIPELINE VIEW */
+        <div className="absolute inset-0 flex flex-col items-center justify-center gap-3.5 px-6 py-8 overflow-hidden bg-zinc-950/90 backdrop-blur-sm">
+          <div className="relative">
+            <div className="w-12 h-12 rounded-full bg-zinc-900 border border-zinc-800 flex items-center justify-center">
+              <Loader2 className="w-6 h-6 text-zinc-200 animate-spin" />
+            </div>
+            <span className="absolute -top-1 -right-1 flex h-3 w-3">
+              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-amber-400 opacity-75"></span>
+              <span className="relative inline-flex rounded-full h-3 w-3 bg-amber-500"></span>
+            </span>
           </div>
-          <div className="w-full max-w-md min-h-0 space-y-1.5 font-mono text-[11px] text-left">
+
+          <div className="font-mono text-xs uppercase tracking-widest text-zinc-100 font-bold shrink-0">
+            {appState === 'GENERATING_ATMOSPHERE' ? 'Synthesizing Atmosphere' : appState === 'GENERATING_PROMPT' ? 'Translating Prompt Directive' : 'Rendering Cinematic Video'}
+          </div>
+
+          <div className="w-full max-w-md min-h-0 space-y-1.5 font-mono text-[11px] text-left p-3.5 rounded-xl bg-zinc-900/60 border border-zinc-800/80">
             {recentLogs.map((log) => (
               <div key={log.id} className={logColor(log.type)}>
-                <div className="truncate"><span className="text-zinc-600">›</span> {log.message}</div>
+                <div className="truncate flex items-center gap-1.5">
+                  <span className="text-zinc-600 font-bold">›</span>
+                  <span>{log.message}</span>
+                </div>
                 {log.image && (
-                  // The freshly generated atmosphere image, ticking past in the feed.
                   <img
                     src={log.image}
-                    alt="Generated atmosphere"
-                    className="mt-2 h-40 md:h-52 w-auto border border-zinc-800 bg-zinc-900"
+                    alt="Generated atmosphere reference"
+                    className="mt-2.5 h-36 md:h-44 w-auto rounded-lg border border-zinc-700 bg-zinc-900 shadow-md"
                   />
                 )}
               </div>
@@ -87,14 +119,65 @@ export function VideoOutput({ appState, videoUrl, logs }: VideoOutputProps) {
           </div>
         </div>
       ) : (
-        <div className="flex flex-col items-center text-center px-6 w-full max-w-md">
-          <div className="font-mono text-xs uppercase tracking-widest text-zinc-700">Awaiting render</div>
+        /* EMPTY STATE / AWAITING RENDER VIEWPORT */
+        <div id="empty-state-viewport" className="flex flex-col items-center justify-center text-center px-6 w-full max-w-lg relative z-10 py-6">
+          {/* Top HUD indicator */}
+          <div className="flex items-center gap-3 mb-5 text-[10px] font-mono tracking-widest text-zinc-500 uppercase">
+            <span className="flex items-center gap-1.5">
+              <span className={`w-2 h-2 rounded-full ${readyToGenerate ? 'bg-emerald-400 animate-pulse' : 'bg-zinc-600'}`} />
+              {readyToGenerate ? 'STANDBY • READY' : 'INPUTS PENDING'}
+            </span>
+            <span className="text-zinc-700">|</span>
+            <span>16:9 • 1080P</span>
+            <span className="text-zinc-700">|</span>
+            <span>00:00:00:00</span>
+          </div>
+
+          {/* Central camera / film aperture badge */}
+          <div className="w-14 h-14 rounded-2xl bg-zinc-900/90 border border-zinc-800 flex items-center justify-center shadow-lg shadow-black/40 text-zinc-400 mb-4 group hover:border-zinc-700 transition-colors">
+            <Film className="w-6 h-6 text-zinc-300" />
+          </div>
+
+          <h3 className="font-mono text-sm uppercase tracking-wider text-zinc-100 font-bold mb-1.5">
+            Cinematic Viewport
+          </h3>
+          <p className="font-mono text-xs text-zinc-400 leading-relaxed max-w-sm mb-6">
+            Configure your product reference photo and atmosphere in the left builder panel to generate your video sequence.
+          </p>
+
+          {/* Dynamic input checklist */}
+          <div className="flex flex-wrap items-center justify-center gap-2 mb-2">
+            <div className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg border text-[11px] font-mono transition-all ${
+              hasProduct
+                ? 'bg-emerald-950/30 border-emerald-800/60 text-emerald-300'
+                : 'bg-zinc-900/40 border-zinc-800 text-zinc-500'
+            }`}>
+              {hasProduct ? <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400" /> : <Circle className="w-3.5 h-3.5 text-zinc-600" />}
+              <span>Product Image</span>
+            </div>
+
+            <div className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg border text-[11px] font-mono transition-all ${
+              hasAtmosphere
+                ? 'bg-emerald-950/30 border-emerald-800/60 text-emerald-300'
+                : 'bg-zinc-900/40 border-zinc-800 text-zinc-500'
+            }`}>
+              {hasAtmosphere ? <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400" /> : <Circle className="w-3.5 h-3.5 text-zinc-600" />}
+              <span>Atmosphere Scene</span>
+            </div>
+          </div>
+
+          {/* Error Banner when failure occurs */}
           {lastLog?.type === 'error' && (
-            <div className="mt-4 w-full flex items-start gap-3 rounded-md border border-red-500/40 bg-red-500/10 px-4 py-3 text-left">
+            <div id="render-error-card" className="mt-5 w-full flex items-start gap-3 rounded-xl border border-red-500/40 bg-red-950/30 px-4 py-3 text-left shadow-lg">
               <AlertTriangle className="w-4 h-4 mt-0.5 shrink-0 text-red-400" />
-              <p className="font-mono text-xs leading-relaxed text-red-200 break-words">
-                {readableError(lastLog.message)}
-              </p>
+              <div className="flex-1 min-w-0">
+                <span className="font-mono text-[10px] uppercase tracking-wider text-red-400 font-bold block mb-0.5">
+                  Notice
+                </span>
+                <p className="font-mono text-xs leading-relaxed text-red-200 break-words">
+                  {readableError(lastLog.message)}
+                </p>
+              </div>
             </div>
           )}
         </div>
