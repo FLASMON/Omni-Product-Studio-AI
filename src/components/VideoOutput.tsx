@@ -25,6 +25,17 @@ const logColor = (type: LogType) =>
 // `Error: 400 {"error":{"message":"...","code":"..."}}`. Pull out the
 // human-readable message so we don't dump JSON at the user.
 const readableError = (raw: string): string => {
+  const lower = raw.toLowerCase();
+  if (
+    lower.includes('quota') ||
+    lower.includes('429') ||
+    lower.includes('ratelimit') ||
+    lower.includes('limit: 0') ||
+    lower.includes('billing')
+  ) {
+    return 'Gemini Omni Flash video generation requires a Gemini API key with billing enabled (paid tier), as the free tier has a quota limit of 0 for video models. Please select or configure a paid API key in AI Studio.';
+  }
+
   const match = raw.match(/\{[\s\S]*\}/);
   if (match) {
     try {
@@ -218,20 +229,39 @@ export function VideoOutput({
             </div>
           </div>
 
-          {/* Error Banner when failure occurs */}
-          {lastLog?.type === 'error' && (
-            <div id="render-error-card" className="mt-6 flex w-full items-start gap-3 rounded-xl border border-red-200 bg-red-50 px-4 py-3.5 text-left shadow-lg shadow-red-950/5 dark:border-red-500/40 dark:bg-red-950/40 dark:shadow-red-950/20">
-              <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0 text-red-600 dark:text-red-400" />
-              <div className="flex-1 min-w-0">
-                <span className="mb-0.5 block font-mono text-[10px] font-bold uppercase tracking-wider text-red-600 dark:text-red-400">
-                  Notice
-                </span>
-                <p className="font-mono text-xs leading-relaxed text-red-700 break-words dark:text-red-200">
-                  {readableError(lastLog.message)}
-                </p>
+          {/* Error / Notice Banner when failure occurs */}
+          {lastLog?.type === 'error' && (() => {
+            const errorMsg = readableError(lastLog.message);
+            const isNotice = errorMsg.includes('paid tier') || errorMsg.includes('quota');
+            return (
+              <div
+                id="render-error-card"
+                className={`mt-6 flex w-full items-start gap-3 rounded-xl border px-4 py-3.5 text-left shadow-lg transition-all ${
+                  isNotice
+                    ? 'border-amber-500/35 bg-amber-50 text-amber-900 shadow-amber-950/5 dark:border-amber-500/40 dark:bg-amber-950/40 dark:text-amber-200'
+                    : 'border-red-200 bg-red-50 text-red-900 shadow-red-950/5 dark:border-red-500/40 dark:bg-red-950/40 dark:text-red-200'
+                }`}
+              >
+                <AlertTriangle
+                  className={`mt-0.5 h-4 w-4 shrink-0 ${
+                    isNotice ? 'text-amber-600 dark:text-amber-400' : 'text-red-600 dark:text-red-400'
+                  }`}
+                />
+                <div className="flex-1 min-w-0">
+                  <span
+                    className={`mb-0.5 block font-mono text-[10px] font-bold uppercase tracking-wider ${
+                      isNotice ? 'text-amber-700 dark:text-amber-300' : 'text-red-600 dark:text-red-400'
+                    }`}
+                  >
+                    Notice
+                  </span>
+                  <p className="text-xs leading-relaxed break-words font-normal">
+                    {errorMsg}
+                  </p>
+                </div>
               </div>
-            </div>
-          )}
+            );
+          })()}
         </div>
       )}
     </div>
