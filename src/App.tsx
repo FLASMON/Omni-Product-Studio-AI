@@ -1,6 +1,6 @@
 import React, { useState, useRef, useMemo, useEffect } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { Loader2, ArrowRight, ChevronRight, Download, Wand2, SlidersHorizontal, Sparkles, Clapperboard, Film, History, X } from 'lucide-react';
+import { Loader2, ArrowRight, ChevronRight, Download, Wand2, SlidersHorizontal, Sparkles, Clapperboard, Film, History, X, Sun, Moon } from 'lucide-react';
 import { PRODUCTS, ATMOSPHERES, MediaSelection } from './data.js';
 import { ImageUploader } from './components/ImageUploader.js';
 import { VideoOutput } from './components/VideoOutput.js';
@@ -9,6 +9,7 @@ import { PostPanel } from './components/PostPanel.js';
 import { VideoGrades, DEFAULT_GRADES, buildGradeFilter } from './filters.js';
 import { captureVideoFrame } from './videoFrame.js';
 import { AppSidebar, PageHeading, AppPage } from './components/AppSidebar.js';
+import { Theme, readTheme, applyTheme } from './theme.js';
 import { MediaLibrary, LibraryItem, LibraryAction } from './components/MediaLibrary.js';
 import { STOCK_VIDEOS, STOCK_CATEGORY_LABEL, FILTER_PREVIEW_STILL } from './stockVideos.js';
 import { toInlineImages, InlineImage } from './images.js';
@@ -53,6 +54,11 @@ export default function App() {
   const [editText, setEditText] = useState('');
   const [promptOpen, setPromptOpen] = useState(false);
   const [downloading, setDownloading] = useState(false);
+
+  // Dark (default) or light studio theme — persisted, applied on <html>.
+  const [theme, setTheme] = useState<Theme>(readTheme);
+
+  useEffect(() => { applyTheme(theme); }, [theme]);
 
   // Desktop-only: collapses the builder panel to a slim rail. Mobile keeps the
   // stacked layout and ignores this state entirely.
@@ -409,8 +415,8 @@ export default function App() {
       {/* HEADER — app-level bar with branding and panel toggles (desktop) */}
       <header id="app-header" className="shrink-0 border-b border-zinc-800 bg-zinc-900 px-4 md:px-6 h-14 flex items-center justify-between gap-4">
         <div className="flex items-center gap-3 min-w-0">
-          <span className="w-8 h-8 shrink-0 rounded-lg bg-zinc-800 border border-zinc-700 flex items-center justify-center shadow-sm">
-            <Clapperboard className="w-4 h-4 text-zinc-200" />
+          <span className="w-8 h-8 shrink-0 rounded-lg bg-primary/15 border border-primary/35 flex items-center justify-center shadow-sm">
+            <Clapperboard className="w-4 h-4 text-primary" />
           </span>
           <div className="min-w-0 leading-tight">
             <h1 id="app-title" className="text-sm font-semibold text-white truncate">
@@ -432,6 +438,17 @@ export default function App() {
         </div>
 
         <div className="flex items-center gap-2">
+          <button
+            id="theme-toggle"
+            type="button"
+            onClick={() => setTheme(t => (t === 'dark' ? 'light' : 'dark'))}
+            aria-pressed={theme === 'light'}
+            aria-label={theme === 'dark' ? 'Switch to light mode' : 'Switch to dark mode'}
+            title={theme === 'dark' ? 'Switch to light mode' : 'Switch to dark mode'}
+            className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg border border-zinc-700 bg-zinc-800 text-zinc-300 transition-colors hover:border-primary/50 hover:bg-primary/10 hover:text-primary"
+          >
+            {theme === 'dark' ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
+          </button>
           {page === 'studio' && (
           <span className={`hidden md:inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-medium border ${
             canSubmit ? 'text-emerald-300 bg-emerald-500/10 border-emerald-500/30'
@@ -454,8 +471,8 @@ export default function App() {
             title={postOpen ? 'Collapse post-production panel' : 'Expand post-production panel'}
             className={`hidden md:flex w-8 h-8 items-center justify-center rounded-lg border transition-colors ${
               postOpen
-                ? 'border-zinc-700 bg-zinc-800 text-zinc-300 hover:text-white hover:bg-zinc-700'
-                : 'border-zinc-700 bg-zinc-800 text-zinc-500 hover:text-white hover:bg-zinc-700'
+                ? 'border-primary/60 bg-primary/10 text-primary hover:bg-primary/20'
+                : 'border-zinc-700 bg-zinc-800 text-zinc-500 hover:border-primary/50 hover:text-primary'
             }`}
           >
             <SlidersHorizontal className="w-4 h-4" />
@@ -542,11 +559,11 @@ export default function App() {
                   id="generate-video-submit-btn"
                   onClick={handleSubmit}
                   disabled={!canSubmit}
-                  className="group relative inline-flex items-center justify-center px-8 py-4 font-semibold text-xs uppercase tracking-widest rounded-xl transition-all duration-200 w-full shadow-lg shadow-black/30 active:scale-[0.98] disabled:opacity-40 disabled:cursor-not-allowed disabled:shadow-none bg-white hover:bg-zinc-100 hover:shadow-xl hover:shadow-white/10 text-zinc-950 border border-white disabled:bg-zinc-900 disabled:text-zinc-600 disabled:border-zinc-800"
+                  className="group relative inline-flex items-center justify-center px-8 py-4 font-semibold text-xs uppercase tracking-widest rounded-xl transition-all duration-200 w-full shadow-lg shadow-primary/25 active:scale-[0.98] disabled:opacity-40 disabled:cursor-not-allowed disabled:shadow-none bg-primary hover:bg-primary-hover hover:shadow-xl hover:shadow-primary/25 text-on-primary border border-primary disabled:bg-zinc-900 disabled:text-zinc-600 disabled:border-zinc-800"
                 >
                   {isGenerating ? (
                     <>
-                      <Loader2 className="mr-2.5 w-4 h-4 animate-spin text-zinc-950" />
+                      <Loader2 className="mr-2.5 w-4 h-4 animate-spin text-on-primary" />
                       Generating Cinematic Shot…
                     </>
                   ) : (
@@ -589,14 +606,14 @@ export default function App() {
               <ScrollRow className="flex-1 min-w-0" rowClassName="gap-4" deps={[otherVersions.length]}>
                 {otherVersions.map(v => (
                   <button key={v.label} onClick={() => selectVersion(v.label)} className="group flex-none text-left">
-                    <div className="text-xs font-medium uppercase tracking-widest text-zinc-400 group-hover:text-white mb-1.5 transition-colors">{v.label}</div>
+                    <div className="text-xs font-medium uppercase tracking-widest text-zinc-400 group-hover:text-primary mb-1.5 transition-colors">{v.label}</div>
                     <video
                       src={v.videoUrl}
                       muted
                       playsInline
                       preload="metadata"
                       style={{ filter: gradeFilter || undefined }}
-                      className="w-40 aspect-video object-cover bg-black rounded-lg ring-1 ring-zinc-800 opacity-70 group-hover:opacity-100 group-hover:ring-zinc-600 transition-all"
+                      className="w-40 aspect-video object-cover bg-black rounded-lg ring-1 ring-zinc-800 opacity-70 group-hover:opacity-100 group-hover:ring-primary/60 transition-all"
                     />
                   </button>
                 ))}
@@ -613,13 +630,13 @@ export default function App() {
                 <div className="flex flex-col gap-2">
                   <button
                     onClick={() => setEditOpen(o => !o)}
-                    className="text-sm font-medium uppercase tracking-widest text-white text-left hover:text-zinc-300 transition-colors"
+                    className="text-sm font-medium uppercase tracking-widest text-white text-left hover:text-primary transition-colors"
                   >
                     {selected.label}
                   </button>
                   <button
                     onClick={() => setEditOpen(o => !o)}
-                    className={`text-xs font-medium uppercase tracking-widest text-left transition-colors ${editOpen ? 'text-white' : 'text-zinc-500 hover:text-white'}`}
+                    className={`text-xs font-medium uppercase tracking-widest text-left transition-colors ${editOpen ? 'text-primary' : 'text-zinc-500 hover:text-primary'}`}
                   >
                     Edit
                   </button>
@@ -628,7 +645,7 @@ export default function App() {
                     disabled={downloading}
                     aria-label={`Download ${selected.label}`}
                     title="Download video"
-                    className="w-fit p-1 -m-1 rounded-md text-zinc-500 hover:text-white hover:bg-white/5 transition-colors disabled:opacity-50"
+                    className="w-fit p-1 -m-1 rounded-md text-zinc-500 hover:text-primary hover:bg-primary/10 transition-colors disabled:opacity-50"
                   >
                     {downloading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Download className="w-4 h-4" />}
                   </button>
@@ -652,7 +669,7 @@ export default function App() {
                   type="button"
                   id="mobile-grade-btn"
                   onClick={() => setSheetOpen(true)}
-                  className="md:hidden mt-3 inline-flex w-full items-center justify-center gap-2 rounded-xl border border-zinc-700 bg-zinc-900 px-4 py-3 text-xs font-semibold text-zinc-100 active:scale-[0.98]"
+                  className="md:hidden mt-3 inline-flex w-full items-center justify-center gap-2 rounded-xl border border-zinc-700 bg-zinc-900 px-4 py-3 text-xs font-semibold text-zinc-100 transition-colors hover:border-primary/50 hover:text-primary active:scale-[0.98]"
                 >
                   <SlidersHorizontal className="h-3.5 w-3.5" />
                   Grade & Filters
@@ -677,12 +694,12 @@ export default function App() {
                       value={editText}
                       onChange={(e) => setEditText(e.target.value)}
                       placeholder={`Describe your changes to ${selected.label} — e.g. "warmer lighting", "slow orbit", "swap the backdrop"…`}
-                      className="w-full bg-zinc-900 border border-zinc-800 rounded-xl text-zinc-300 p-4 text-sm leading-relaxed focus:outline-none focus:ring-2 focus:ring-white/20 focus:border-zinc-600 hover:border-zinc-700 transition-colors resize-y min-h-[100px] placeholder:text-zinc-600 shadow-inner"
+                      className="w-full bg-zinc-900 border border-zinc-800 rounded-xl text-zinc-300 p-4 text-sm leading-relaxed focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary hover:border-primary/40 transition-colors resize-y min-h-[100px] placeholder:text-zinc-600 shadow-inner"
                     />
                     <button
                       onClick={handleEdit}
                       disabled={!editText.trim()}
-                      className="group mt-3 inline-flex items-center justify-center px-8 py-3 font-semibold uppercase tracking-widest text-zinc-950 bg-white hover:bg-zinc-200 rounded-xl shadow-lg shadow-black/20 active:scale-[0.98] transition-all disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:bg-white disabled:shadow-none"
+                      className="group mt-3 inline-flex items-center justify-center px-8 py-3 font-semibold uppercase tracking-widest text-on-primary bg-primary hover:bg-primary-hover rounded-xl shadow-lg shadow-primary/25 active:scale-[0.98] transition-all disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:bg-primary disabled:shadow-none"
                     >
                       Submit Edit
                       <ArrowRight className="ml-3 w-5 h-5 group-hover:translate-x-1 transition-transform" />
@@ -717,7 +734,7 @@ export default function App() {
               <div className="flex-1 min-w-0">
                 <button
                   onClick={() => setPromptOpen(o => !o)}
-                  className="flex items-center gap-2 text-sm font-semibold uppercase tracking-widest text-white hover:text-zinc-300 transition-colors"
+                  className="flex items-center gap-2 text-sm font-semibold uppercase tracking-widest text-white hover:text-primary transition-colors"
                 >
                   <ChevronRight className={`w-4 h-4 transition-transform ${promptOpen ? 'rotate-90' : ''}`} />
                   Prompt
@@ -793,7 +810,7 @@ export default function App() {
               <button
                 type="button"
                 onClick={() => setPage('studio')}
-                className="inline-flex items-center gap-2 rounded-xl border border-white bg-white px-4 py-2 text-xs font-semibold text-zinc-950 transition-colors hover:bg-zinc-100 active:scale-[0.98]"
+                className="inline-flex items-center gap-2 rounded-xl border border-primary bg-primary px-4 py-2 text-xs font-semibold text-on-primary transition-colors hover:bg-primary-hover active:scale-[0.98]"
               >
                 <Wand2 className="w-3.5 h-3.5" />
                 Open Studio
@@ -872,7 +889,7 @@ export default function App() {
             href="https://policies.google.com/terms/generative-ai/use-policy"
             target="_blank"
             rel="noopener noreferrer"
-            className="px-2 py-0.5 rounded-md text-zinc-300 hover:text-white hover:bg-zinc-800 border border-transparent hover:border-zinc-700 transition-colors underline underline-offset-4 decoration-zinc-700"
+            className="px-2 py-0.5 rounded-md text-zinc-300 hover:text-primary hover:bg-primary/10 border border-transparent hover:border-primary/40 transition-colors underline underline-offset-4 decoration-zinc-700"
           >
             Prohibited Use Policy
           </a>

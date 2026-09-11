@@ -1,13 +1,78 @@
 @import url('https://fonts.googleapis.com/css2?family=Poppins:ital,wght@0,300;0,400;0,500;0,600;0,700;1,400&display=swap');
 @import "tailwindcss";
 
+/* `dark:` follows our own theme attribute instead of the OS preference, so the
+   rare colour the zinc remap cannot handle (status greens/ambers) still reads
+   on both backdrops. */
+@custom-variant dark (&:where([data-theme="dark"], [data-theme="dark"] *));
+
 @theme {
   --font-sans: "Poppins", ui-sans-serif, system-ui, sans-serif;
   --font-mono: "Poppins", ui-monospace, SFMono-Regular, monospace;
+
+  /* Brand — the one accent colour: active, hover and focus states. */
+  --color-primary: #e60023;
+  --color-primary-hover: #cc001f;
+  /* Text/icons that sit *on* the primary colour or on media. Never remapped
+     by the light theme, so contrast survives the flip. */
+  --color-on-primary: #ffffff;
+  --color-on-dark: #ffffff;
+}
+
+/* ── DARK (default) ────────────────────────────────────────────────────── */
+:root {
+  color-scheme: dark;
+  --scroll-thumb: #3f3f46;
+  --scroll-thumb-hover: #52525b;
+  --grid-line: rgba(255, 255, 255, 0.022);
+  --ambient-glow: rgba(255, 255, 255, 0.045);
+  --shimmer-sweep: rgba(255, 255, 255, 0.12);
+  --empty-halo: rgba(255, 255, 255, 0.05);
+}
+
+/* ── LIGHT ────────────────────────────────────────────────────────────────
+   The whole UI is written against the zinc ramp, so remapping those variables
+   flips every surface at once. The numbers keep their "distance from the page"
+   meaning: zinc-950 is the page (white), zinc-900 the panels (gray-100),
+   zinc-500 muted copy (gray-500), white the strongest text. Declared outside
+   any layer so it wins over Tailwind's generated @theme block. */
+:root[data-theme="light"] {
+  color-scheme: light;
+  --color-white: #111827;
+  --color-zinc-50: #030712;
+  --color-zinc-100: #111827;
+  --color-zinc-200: #1f2937;
+  --color-zinc-300: #374151;
+  --color-zinc-400: #4b5563;
+  --color-zinc-500: #6b7280;
+  --color-zinc-600: #9ca3af;
+  --color-zinc-700: #d1d5db;
+  --color-zinc-800: #e5e7eb;
+  --color-zinc-900: #f3f4f6;
+  --color-zinc-950: #ffffff;
+  --scroll-thumb: #d1d5db;
+  --scroll-thumb-hover: #9ca3af;
+  --grid-line: rgba(17, 24, 39, 0.045);
+  --ambient-glow: rgba(230, 0, 35, 0.05);
+  --shimmer-sweep: rgba(17, 24, 39, 0.07);
+  --empty-halo: rgba(230, 0, 35, 0.03);
 }
 
 body {
   @apply bg-zinc-950 text-zinc-50 antialiased;
+  transition: background-color 0.25s ease, color 0.25s ease;
+}
+
+/* One focus language everywhere: the brand colour. Controls that ship their own
+   focus-visible ring (Tailwind utilities) still win, which is intended. */
+:where(button, a[href], input, textarea, select, [role="button"], [tabindex]):focus-visible {
+  outline: 2px solid var(--color-primary);
+  outline-offset: 2px;
+}
+
+::selection {
+  background: var(--color-primary);
+  color: var(--color-on-primary);
 }
 
 .hide-scrollbar {
@@ -20,7 +85,7 @@ body {
 /* Elegant thin scrollbars for panel scrolling */
 .thin-scrollbar {
   scrollbar-width: thin;
-  scrollbar-color: #3f3f46 transparent;
+  scrollbar-color: var(--scroll-thumb) transparent;
 }
 .thin-scrollbar::-webkit-scrollbar {
   width: 5px;
@@ -30,11 +95,11 @@ body {
   background: transparent;
 }
 .thin-scrollbar::-webkit-scrollbar-thumb {
-  background-color: #3f3f46;
+  background-color: var(--scroll-thumb);
   border-radius: 9999px;
 }
 .thin-scrollbar::-webkit-scrollbar-thumb:hover {
-  background-color: #52525b;
+  background-color: var(--scroll-thumb-hover);
 }
 
 /* Uploaded-image rows hide the scrollbar on desktop, but show a thin one on
@@ -65,14 +130,14 @@ body {
 
 /* Ambient top-light glow behind the builder panel */
 .ambient-glow {
-  background: radial-gradient(ellipse 600px 400px at 20% 0%, rgba(255, 255, 255, 0.045), transparent 65%);
+  background: radial-gradient(ellipse 600px 400px at 20% 0%, var(--ambient-glow), transparent 65%);
 }
 
 /* Subtle grid backdrop for the viewport area */
 .grid-backdrop {
   background-image:
-    linear-gradient(rgba(255, 255, 255, 0.022) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(255, 255, 255, 0.022) 1px, transparent 1px);
+    linear-gradient(var(--grid-line) 1px, transparent 1px),
+    linear-gradient(90deg, var(--grid-line) 1px, transparent 1px);
   background-size: 44px 44px;
 }
 
@@ -86,7 +151,7 @@ body {
   position: absolute;
   inset: 0;
   transform: translateX(-100%);
-  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.12), transparent);
+  background: linear-gradient(90deg, transparent, var(--shimmer-sweep), transparent);
   animation: shimmer-sweep 2.4s ease-in-out infinite;
   pointer-events: none;
 }

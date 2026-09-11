@@ -96,12 +96,12 @@ export function VideoOutput({
         /* GENERATION PIPELINE VIEW */
         <div className="absolute inset-0 flex flex-col items-center justify-center gap-4 px-6 py-8 overflow-hidden bg-zinc-950/95 backdrop-blur-md">
           {/* Soft radial glow behind the pipeline */}
-          <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,rgba(255,255,255,0.045),transparent_65%)] pointer-events-none" />
+          <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,rgba(230,0,35,0.05),transparent_65%)] pointer-events-none" />
 
           {/* Spinning conic ring + breathing amber core */}
           <div className="relative shrink-0 pulse-glow rounded-full">
             <div className="w-14 h-14 rounded-full conic-spin"
-              style={{ background: 'conic-gradient(from 0deg, rgba(255,255,255,0) 0%, rgba(255,255,255,0.85) 25%, rgba(255,255,255,0) 45%)' }}
+              style={{ background: 'conic-gradient(from 0deg, rgba(230,0,35,0) 0%, #e60023 25%, rgba(230,0,35,0) 45%)' }}
             >
               <div className="absolute inset-[3px] rounded-full bg-zinc-950" />
             </div>
@@ -163,7 +163,7 @@ export function VideoOutput({
         /* EMPTY STATE / AWAITING RENDER VIEWPORT — frameless, centred, calm */
         <div id="empty-state-viewport" className="relative z-10 flex w-full max-w-xl flex-col items-center justify-center px-6 py-10 text-center">
           {/* Ambient light behind the whole block */}
-          <div className="pointer-events-none absolute inset-0 -z-10 bg-[radial-gradient(ellipse_at_center,rgba(255,255,255,0.07),transparent_68%)]" />
+          <div className="pointer-events-none absolute inset-0 -z-10 bg-[radial-gradient(ellipse_at_center,rgba(230,0,35,0.07),transparent_68%)]" />
 
           {/* Status line */}
           <div className="mb-9 flex flex-wrap items-center justify-center gap-x-3 gap-y-2 text-[10px] uppercase tracking-[0.28em] text-zinc-600">
@@ -199,14 +199,14 @@ export function VideoOutput({
           {/* Input checklist — soft filled chips, no outlines */}
           <div className="mt-8 flex flex-wrap items-center justify-center gap-2.5">
             <div className={`flex items-center gap-2 rounded-full px-4 py-2 text-[11px] font-medium transition-all duration-300 ${
-              hasProduct ? 'bg-emerald-500/[0.12] text-emerald-300' : 'bg-white/[0.04] text-zinc-500'
+              hasProduct ? 'bg-emerald-500/10 text-emerald-700 dark:bg-emerald-500/[0.12] dark:text-emerald-300' : 'bg-white/[0.04] text-zinc-500'
             }`}>
               {hasProduct ? <CheckCircle2 className="h-3.5 w-3.5" /> : <Circle className="h-3.5 w-3.5 text-zinc-600" />}
               <span>Product reference</span>
             </div>
 
             <div className={`flex items-center gap-2 rounded-full px-4 py-2 text-[11px] font-medium transition-all duration-300 ${
-              hasAtmosphere ? 'bg-emerald-500/[0.12] text-emerald-300' : 'bg-white/[0.04] text-zinc-500'
+              hasAtmosphere ? 'bg-emerald-500/10 text-emerald-700 dark:bg-emerald-500/[0.12] dark:text-emerald-300' : 'bg-white/[0.04] text-zinc-500'
             }`}>
               {hasAtmosphere ? <CheckCircle2 className="h-3.5 w-3.5" /> : <Circle className="h-3.5 w-3.5 text-zinc-600" />}
               <span>Atmosphere scene</span>

@@ -35,7 +35,7 @@ interface AppSidebarProps {
 
 function Badge({ count }: { count: number }) {
   return (
-    <span className="absolute -right-1 -top-1 min-w-[18px] rounded-full border border-zinc-950 bg-emerald-400 px-1 text-center text-[9px] font-bold leading-[16px] text-zinc-950 shadow-sm">
+    <span className="absolute -right-1 -top-1 min-w-[18px] rounded-full border border-zinc-950 bg-emerald-400 px-1 text-center text-[9px] font-bold leading-[16px] text-black shadow-sm">
       {count > 99 ? '99+' : count}
     </span>
   );
@@ -68,7 +68,7 @@ export function AppSidebar({ page, onNavigate, renderCount, builder }: AppSideba
               onClick={builder.onToggle}
               aria-pressed={builder.open}
               aria-label={builder.open ? 'Collapse builder panel' : 'Expand builder panel'}
-              className="grid h-11 w-11 place-items-center rounded-lg border border-zinc-700 bg-zinc-800 text-zinc-300 transition-all duration-200 hover:bg-zinc-700 hover:text-white active:scale-95"
+              className="grid h-11 w-11 place-items-center rounded-lg border border-zinc-700 bg-zinc-800 text-zinc-300 transition-all duration-200 hover:border-primary/50 hover:bg-primary/10 hover:text-primary active:scale-95"
             >
               <PanelLeftClose
                 className={`h-[18px] w-[18px] transition-transform duration-300 ${builder.open ? '' : 'rotate-180'}`}
@@ -101,8 +101,8 @@ export function AppSidebar({ page, onNavigate, renderCount, builder }: AppSideba
                 aria-label={item.label}
                 className={`relative grid h-11 w-11 place-items-center rounded-lg border transition-all duration-200 active:scale-95 ${
                   active
-                    ? 'border-white/90 bg-white text-zinc-950 shadow-lg shadow-white/10'
-                    : 'border-transparent text-zinc-400 hover:border-zinc-700 hover:bg-zinc-800/70 hover:text-white'
+                    ? 'border-primary bg-primary text-on-primary shadow-lg shadow-primary/30'
+                    : 'border-transparent text-zinc-400 hover:border-primary/40 hover:bg-primary/10 hover:text-primary'
                 }`}
               >
                 <Icon className="h-[18px] w-[18px]" strokeWidth={active ? 2.4 : 2} />
@@ -127,7 +127,7 @@ export function AppSidebar({ page, onNavigate, renderCount, builder }: AppSideba
             <button
               type="button"
               aria-label="Help & licensing"
-              className="grid h-11 w-11 place-items-center rounded-lg border border-transparent text-zinc-500 transition-all duration-200 hover:border-zinc-700 hover:bg-zinc-800/70 hover:text-white"
+              className="grid h-11 w-11 place-items-center rounded-lg border border-transparent text-zinc-500 transition-all duration-200 hover:border-primary/40 hover:bg-primary/10 hover:text-primary"
             >
               <CircleHelp className="h-[18px] w-[18px]" />
             </button>
@@ -155,19 +155,18 @@ export function AppSidebar({ page, onNavigate, renderCount, builder }: AppSideba
             <button
               key={item.id}
               id={`nav-mobile-${item.id}`}
-              type="button"
-              onClick={() => onNavigate(item.id)}
-              aria-current={active ? 'page' : undefined}
-              className={`relative flex flex-1 items-center justify-center gap-2 rounded-lg border px-3 py-2 text-xs font-semibold transition-all duration-200 ${
-                active
-                  ? 'border-white/90 bg-white text-zinc-950 shadow-lg shadow-white/10'
-                  : 'border-zinc-800 bg-zinc-900/60 text-zinc-400'
-              }`}
+              type="button"                onClick={() => onNavigate(item.id)}
+                aria-current={active ? 'page' : undefined}
+                className={`relative flex flex-1 items-center justify-center gap-2 rounded-lg border px-3 py-2 text-xs font-semibold transition-all duration-200 ${
+                  active
+                    ? 'border-primary bg-primary text-on-primary shadow-lg shadow-primary/30'
+                    : 'border-zinc-800 bg-zinc-900/60 text-zinc-400 hover:border-primary/40 hover:text-primary'
+                }`}
             >
               <Icon className="h-4 w-4" />
               <span className="whitespace-nowrap">{item.label}</span>
               {item.badge > 0 && !active && (
-                <span className="rounded-full bg-emerald-400 px-1.5 text-[9px] font-bold text-zinc-950">
+                <span className="rounded-full bg-emerald-400 px-1.5 text-[9px] font-bold text-black">
                   {item.badge}
                 </span>
               )}
@@ -194,8 +193,8 @@ export function PageHeading({
   return (
     <div className="mb-6 flex flex-wrap items-end justify-between gap-4">
       <div className="flex items-center gap-3">
-        <span className="grid h-11 w-11 shrink-0 place-items-center rounded-2xl border border-zinc-700/70 bg-gradient-to-br from-zinc-800 to-zinc-900 shadow-lg shadow-black/40">
-          <Icon className="h-5 w-5 text-zinc-100" />
+        <span className="grid h-11 w-11 shrink-0 place-items-center rounded-2xl border border-primary/30 bg-primary/10 shadow-lg shadow-black/10">
+          <Icon className="h-5 w-5 text-primary" />
         </span>
         <div>
           <h1 className="text-xl font-semibold tracking-tight text-white">{title}</h1>

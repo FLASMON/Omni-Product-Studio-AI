@@ -125,13 +125,13 @@ export function ImageUploader({
         </div>
 
         {hasSelection ? (
-          <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10px] font-medium tracking-wide bg-emerald-500/10 text-emerald-300 border border-emerald-500/30">
-            <CheckCircle2 className="w-3 h-3 text-emerald-400" />
+          <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10px] font-medium tracking-wide bg-emerald-500/10 text-emerald-700 dark:text-emerald-300 border border-emerald-500/30">
+            <CheckCircle2 className="w-3 h-3 text-emerald-500 dark:text-emerald-400" />
             Configured
           </span>
         ) : generating ? (
-          <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10px] font-medium text-amber-300 bg-amber-500/10 border border-amber-500/30">
-            <Loader2 className="w-3 h-3 animate-spin text-amber-400" />
+          <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10px] font-medium text-amber-700 dark:text-amber-300 bg-amber-500/10 border border-amber-500/30">
+            <Loader2 className="w-3 h-3 animate-spin text-amber-500 dark:text-amber-400" />
             Generating...
           </span>
         ) : (
@@ -156,7 +156,7 @@ export function ImageUploader({
               <button
                 id={`remove-${type}-image-btn`}
                 onClick={handleClear}
-                className="absolute top-2.5 right-2.5 p-1.5 bg-black/80 hover:bg-red-950/80 text-zinc-400 hover:text-red-300 rounded-full transition-colors border border-zinc-700 hover:border-red-800/80 backdrop-blur-sm shadow-sm"
+                className="absolute top-2.5 right-2.5 p-1.5 bg-black/80 hover:bg-primary/90 text-on-dark/80 hover:text-on-primary rounded-full transition-colors border border-white/20 hover:border-primary backdrop-blur-sm shadow-sm"
                 aria-label="Remove image"
                 title="Remove image"
               >
@@ -166,12 +166,12 @@ export function ImageUploader({
 
             <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/95 via-black/75 to-transparent p-3 pt-8">
               <div className="flex items-center gap-1.5 mb-1">
-                <ImageIcon className="w-3 h-3 text-zinc-400" />
-                <span className="text-[10px] font-medium uppercase tracking-widest text-zinc-400">
+                <ImageIcon className="w-3 h-3 text-on-dark/70" />
+                <span className="text-[10px] font-medium uppercase tracking-widest text-on-dark/70">
                   {selection.source === 'upload' ? 'Custom Upload' : 'Selected Preset'}
                 </span>
               </div>
-              <p className="text-xs text-zinc-200 line-clamp-2 leading-relaxed">
+              <p className="text-xs text-on-dark line-clamp-2 leading-relaxed">
                 {selection.description}
               </p>
             </div>
@@ -181,7 +181,7 @@ export function ImageUploader({
             <button
               id={`reset-${type}-btn`}
               onClick={handleClear}
-              className="w-full py-2.5 px-5 text-xs font-medium uppercase tracking-wider text-zinc-400 hover:text-zinc-100 transition-all bg-zinc-900 hover:bg-zinc-800 border border-zinc-800 hover:border-zinc-700 rounded-xl flex items-center justify-center gap-2"
+              className="w-full py-2.5 px-5 text-xs font-medium uppercase tracking-wider text-zinc-400 hover:text-primary transition-all bg-zinc-900 hover:bg-primary/10 border border-zinc-800 hover:border-primary/40 rounded-xl flex items-center justify-center gap-2"
             >
               <RotateCcw className="w-3.5 h-3.5 text-zinc-500" />
               Replace Reference
@@ -211,7 +211,7 @@ export function ImageUploader({
                 disabled={disabled || generating}
                 placeholder={`Describe desired ${type} (e.g., "${type === 'product' ? 'ceramic tumbler with matte textured glaze' : 'sunlit travertine plinth with warm palms'}"...)`}
                 rows={3}
-                className="w-full bg-zinc-950 hover:bg-zinc-950 focus:bg-zinc-950 border border-zinc-800 hover:border-zinc-600 focus:border-zinc-500 text-zinc-100 p-4 text-xs leading-relaxed focus:outline-none focus:ring-2 focus:ring-white/15 rounded-xl resize-none placeholder:text-zinc-600 transition-all shadow-inner disabled:opacity-60"
+                className="w-full bg-zinc-950 hover:bg-zinc-950 focus:bg-zinc-950 border border-zinc-800 hover:border-primary/40 focus:border-primary text-zinc-100 p-4 text-xs leading-relaxed focus:outline-none focus:ring-2 focus:ring-primary/20 rounded-xl resize-none placeholder:text-zinc-600 transition-all shadow-inner disabled:opacity-60"
               />
             </div>
           </div>
@@ -232,8 +232,8 @@ export function ImageUploader({
                     disabled={disabled || generating}
                     className={`px-3 py-1.5 text-[11px] font-medium rounded-lg border transition-all duration-150 ${
                       isSelected
-                        ? 'bg-white text-zinc-950 border-white font-semibold shadow-md shadow-white/10 scale-[1.02]'
-                        : 'bg-zinc-900 text-zinc-400 border-zinc-800 hover:border-zinc-600 hover:text-zinc-200 hover:bg-zinc-800'
+                        ? 'bg-primary text-on-primary border-primary font-semibold shadow-md shadow-primary/25 scale-[1.02]'
+                        : 'bg-zinc-900 text-zinc-400 border-zinc-800 hover:border-primary/50 hover:text-primary hover:bg-primary/8'
                     }`}
                   >
                     {item.label}
@@ -248,16 +248,16 @@ export function ImageUploader({
             id={`generate-${type}-btn`}
             onClick={handleGenerate}
             disabled={disabled || generating || !promptText.trim()}
-            className="w-full flex items-center justify-center gap-2.5 py-3.5 px-6 bg-white hover:bg-zinc-100 text-zinc-950 text-xs font-semibold uppercase tracking-wider rounded-xl transition-all duration-150 shadow-lg shadow-black/25 hover:shadow-xl hover:shadow-white/10 active:scale-[0.98] border border-white disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:bg-white disabled:shadow-none"
+            className="w-full flex items-center justify-center gap-2.5 py-3.5 px-6 bg-primary hover:bg-primary-hover text-on-primary text-xs font-semibold uppercase tracking-wider rounded-xl transition-all duration-150 shadow-lg shadow-primary/25 hover:shadow-xl hover:shadow-primary/30 active:scale-[0.98] border border-primary disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:bg-primary disabled:shadow-none"
           >
             {generating ? (
               <>
-                <Loader2 className="w-4 h-4 animate-spin text-zinc-950" />
+                <Loader2 className="w-4 h-4 animate-spin text-on-primary" />
                 <span>Generating {type}...</span>
               </>
             ) : (
               <>
-                <Sparkles className="w-4 h-4 text-zinc-950" />
+                <Sparkles className="w-4 h-4 text-on-primary" />
                 <span>Generate {type} reference</span>
               </>
             )}
@@ -290,8 +290,8 @@ export function ImageUploader({
             tabIndex={0}
             className={`group relative border border-dashed rounded-xl p-5 text-center transition-all duration-200 cursor-pointer overflow-hidden ${
               dragging
-                ? 'border-zinc-300 bg-zinc-800 scale-[1.01] shadow-lg shadow-white/5'
-                : 'border-zinc-700/80 bg-zinc-900/70 hover:border-zinc-500 hover:bg-zinc-800/80'
+                ? 'border-primary bg-primary/10 scale-[1.01] shadow-lg shadow-primary/10'
+                : 'border-zinc-700/80 bg-zinc-900/70 hover:border-primary/50 hover:bg-primary/5'
             }`}
           >
             {/* Glow halo behind the icon while dragging */}
@@ -301,19 +301,19 @@ export function ImageUploader({
             <div className="relative flex flex-col items-center justify-center gap-2">
               <div className={`w-9 h-9 rounded-xl flex items-center justify-center border transition-all duration-200 ${
                 dragging
-                  ? 'bg-white text-zinc-950 border-white scale-110'
-                  : 'bg-zinc-800 border-zinc-700 group-hover:border-zinc-500 group-hover:bg-zinc-700 group-hover:scale-105'
+                  ? 'bg-primary text-on-primary border-primary scale-110'
+                  : 'bg-zinc-800 border-zinc-700 group-hover:border-primary/50 group-hover:bg-primary/15 group-hover:scale-105'
               }`}>
                 <Upload className={`w-4 h-4 transition-colors ${
-                  dragging ? 'text-zinc-950' : 'text-zinc-300 group-hover:text-white'
+                  dragging ? 'text-on-primary' : 'text-zinc-300 group-hover:text-primary'
                 }`} />
               </div>
               <span className={`text-xs transition-colors ${
-                dragging ? 'text-white' : 'text-zinc-300 group-hover:text-white'
+                dragging ? 'text-primary' : 'text-zinc-300'
               }`}>
                 {dragging
                   ? 'Release to upload'
-                  : <>Drop image here or <span className="underline underline-offset-4 text-zinc-400 group-hover:text-zinc-200">browse</span></>}
+                  : <>Drop image here or <span className="underline underline-offset-4 text-primary decoration-primary/50">browse</span></>}
               </span>
               <span className="text-[10px] text-zinc-500">
                 JPEG, PNG, WebP up to 10MB

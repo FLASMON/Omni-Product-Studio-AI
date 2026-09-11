@@ -9,6 +9,15 @@
     <meta property="og:description" content="Turn product photos into cinematic vibe reels with Gemini Omni Flash and Nano Banana Flash Lite." />
   </head>
   <body>
+    <!-- Re-apply the saved theme before first paint so the studio never flashes dark -->
+    <script>
+      try {
+        document.documentElement.dataset.theme =
+          localStorage.getItem('omni-theme') === 'light' ? 'light' : 'dark';
+      } catch (e) {
+        document.documentElement.dataset.theme = 'dark';
+      }
+    </script>
     <div id="root"></div>
     <script type="module" src="/src/main.tsx"></script>
   </body>

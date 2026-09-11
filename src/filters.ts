@@ -89,6 +89,7 @@ export const FILTER_LOOKS: FilterLook[] = [
   { id: 'mystic',         label: 'Mystic',         category: 'Cinematic', grades: { contrast: 12, saturation: -18, temperature: -12, exposure: -4 } },
   { id: 'film-print',     label: 'Film Print',     category: 'Cinematic', grades: { contrast: 8, saturation: -8, sepia: 15, exposure: 3 } },
   { id: 'noir-cinema',    label: 'Noir Cinema',    category: 'Cinematic', grades: { grayscale: 100, contrast: 35 } },
+  { id: 'dramatic',       label: 'Dramatic',       category: 'Cinematic', grades: { contrast: 45, saturation: -12, exposure: -8 } },
 
   // ── Retro ──────────────────────────────────────────────────────────────
   { id: 'vintage',        label: 'Vintage',        category: 'Retro', grades: { sepia: 35, contrast: 10, saturation: -25, exposure: 5 } },
@@ -102,6 +103,7 @@ export const FILTER_LOOKS: FilterLook[] = [
   { id: 'duotone-violet', label: 'Duotone Violet', category: 'Retro', grades: { grayscale: 100, sepia: 60, hue: 250, saturation: 190 } },
   { id: 'cross-process',  label: 'Cross Process',  category: 'Retro', grades: { contrast: 30, saturation: 25, hue: -12, exposure: 4 } },
   { id: 'faded-retro',    label: 'Faded Retro',    category: 'Retro', grades: { contrast: -20, saturation: -25, exposure: 8, sepia: 20 } },
+  { id: 'lo-fi',          label: 'Lo-Fi',          category: 'Retro', grades: { contrast: 25, saturation: -25, sepia: 30, exposure: -2, blur: 0.3 } },
 
   // ── Mono ───────────────────────────────────────────────────────────────
   { id: 'black-white',    label: 'Black & White',  category: 'Mono', grades: { grayscale: 100 } },
@@ -134,6 +136,8 @@ export const FILTER_LOOKS: FilterLook[] = [
   { id: 'sketch',         label: 'Sketch',         category: 'Art', grades: { grayscale: 100, contrast: 60, exposure: 22 } },
   { id: 'xray',           label: 'X-Ray',          category: 'Art', grades: { invert: 100, grayscale: 40, blur: 0.6 } },
   { id: 'blueprint',      label: 'Blueprint',      category: 'Art', grades: { grayscale: 100, sepia: 60, hue: 200, saturation: 220, contrast: 15 } },
+  { id: 'watercolor',     label: 'Watercolor',     category: 'Art', grades: { saturation: 30, contrast: -22, exposure: 14, hue: 8, blur: 1 } },
+  { id: 'glitch',         label: 'Glitch',         category: 'Art', grades: { hue: -25, saturation: 60, contrast: 35, invert: 12 } },
 ];
 
 /** Full grade for a look — used both on the player and on its thumbnail. */
