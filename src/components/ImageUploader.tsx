@@ -192,23 +192,28 @@ export function ImageUploader({
         /* UNCONFIGURED INPUT VIEW */
         <div className="space-y-4">
           {/* PROMPT TEXTAREA */}
-          <div className="space-y-1.5">
-            <label className="text-[10px] font-mono uppercase tracking-wider text-zinc-400 flex items-center justify-between">
-              <span>Prompt Directive</span>
-              <span className="text-zinc-600 font-normal">AI Generation</span>
-            </label>
-            <textarea
-              id={`${type}-prompt-input`}
-              value={promptText}
-              onChange={(e) => {
-                setPromptText(e.target.value);
-                setError(null);
-              }}
-              disabled={disabled || generating}
-              placeholder={`Describe desired ${type} (e.g., "${type === 'product' ? 'ceramic tumbler with matte textured glaze' : 'sunlit travertine plinth with warm palms'}"...)`}
-              rows={3}
-              className="w-full bg-zinc-950/80 border border-zinc-800/90 text-zinc-100 p-3.5 font-mono text-xs leading-relaxed focus:outline-none focus:ring-1 focus:ring-zinc-500/50 focus:border-zinc-600 rounded-xl resize-none placeholder:text-zinc-600 transition-all shadow-inner"
-            />
+          <div className="space-y-2">
+            <div className="flex items-center justify-between text-[11px] font-mono">
+              <label htmlFor={`${type}-prompt-input`} className="uppercase tracking-wider text-zinc-300 font-semibold flex items-center gap-1.5">
+                <Sparkles className="w-3 h-3 text-zinc-400" />
+                <span>Prompt Directive</span>
+              </label>
+              <span className="text-[10px] text-zinc-500 font-normal">AI Synthesis</span>
+            </div>
+            <div className="relative">
+              <textarea
+                id={`${type}-prompt-input`}
+                value={promptText}
+                onChange={(e) => {
+                  setPromptText(e.target.value);
+                  setError(null);
+                }}
+                disabled={disabled || generating}
+                placeholder={`Describe desired ${type} (e.g., "${type === 'product' ? 'ceramic tumbler with matte textured glaze' : 'sunlit travertine plinth with warm palms'}"...)`}
+                rows={3}
+                className="w-full bg-zinc-950/90 hover:bg-zinc-950 focus:bg-zinc-950 border border-zinc-800 hover:border-zinc-700 focus:border-zinc-400 text-zinc-100 p-4 font-mono text-xs leading-relaxed focus:outline-none focus:ring-2 focus:ring-white/10 rounded-xl resize-none placeholder:text-zinc-600 transition-all shadow-inner"
+              />
+            </div>
           </div>
 
           {/* SUGGESTION CHIPS */}
@@ -227,8 +232,8 @@ export function ImageUploader({
                     disabled={disabled || generating}
                     className={`px-3 py-1.5 text-[11px] font-mono rounded-lg border transition-all duration-150 ${
                       isSelected
-                        ? 'bg-zinc-100 text-zinc-950 border-zinc-100 font-semibold shadow-sm'
-                        : 'bg-zinc-950/60 text-zinc-400 border-zinc-800/80 hover:border-zinc-700 hover:text-zinc-200 hover:bg-zinc-900/50'
+                        ? 'bg-white text-zinc-950 border-white font-bold shadow-sm scale-[1.02]'
+                        : 'bg-zinc-900/70 text-zinc-400 border-zinc-800/90 hover:border-zinc-700 hover:text-zinc-200 hover:bg-zinc-850'
                     }`}
                   >
                     {item.label}
@@ -243,7 +248,7 @@ export function ImageUploader({
             id={`generate-${type}-btn`}
             onClick={handleGenerate}
             disabled={disabled || generating || !promptText.trim()}
-            className="w-full flex items-center justify-center gap-2 py-3 px-6 bg-zinc-100 hover:bg-white text-zinc-950 font-mono text-xs font-bold uppercase tracking-wider rounded-xl transition-all duration-150 shadow-sm active:scale-[0.99] disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:bg-zinc-100"
+            className="w-full flex items-center justify-center gap-2.5 py-3.5 px-6 bg-white hover:bg-zinc-100 text-zinc-950 font-mono text-xs font-bold uppercase tracking-wider rounded-xl transition-all duration-150 shadow-sm hover:shadow-md active:scale-[0.98] border border-white disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:bg-white disabled:shadow-none"
           >
             {generating ? (
               <>
@@ -253,7 +258,7 @@ export function ImageUploader({
             ) : (
               <>
                 <Sparkles className="w-4 h-4 text-zinc-950" />
-                <span>Render {type} reference</span>
+                <span>Generate {type} reference</span>
               </>
             )}
           </button>

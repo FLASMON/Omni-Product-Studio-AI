@@ -333,7 +333,7 @@ export default function App() {
                 id="generate-video-submit-btn"
                 onClick={handleSubmit}
                 disabled={!canSubmit}
-                className="group inline-flex items-center justify-center px-8 py-3.5 font-mono font-bold text-xs uppercase tracking-widest rounded-xl transition-all duration-200 w-full shadow-md active:scale-[0.99] disabled:opacity-40 disabled:cursor-not-allowed disabled:shadow-none bg-zinc-100 hover:bg-white text-zinc-950 disabled:bg-zinc-900/60 disabled:text-zinc-600 disabled:border disabled:border-zinc-850"
+                className="group inline-flex items-center justify-center px-8 py-4 font-mono font-bold text-xs uppercase tracking-widest rounded-xl transition-all duration-200 w-full shadow-lg shadow-white/5 active:scale-[0.98] disabled:opacity-40 disabled:cursor-not-allowed disabled:shadow-none bg-white hover:bg-zinc-100 text-zinc-950 border border-white disabled:bg-zinc-900/60 disabled:text-zinc-600 disabled:border-zinc-800/80"
               >
                 {isGenerating ? (
                   <>
@@ -506,23 +506,28 @@ export default function App() {
         </div>
       </div>
 
-      {/* FOOTER — usage disclaimer */}
-      <footer className="shrink-0 border-t border-zinc-800/60 bg-zinc-950 px-6 md:px-10 py-3">
-        <div className="max-w-5xl space-y-1.5 text-xs leading-relaxed text-zinc-500">
-          <p>
-            By using this feature, you confirm that you have the necessary rights to any content that you upload. Do not generate content that infringes on others’ intellectual property or privacy rights. Your use of this generative AI service is subject to our{' '}
-            <a
-              href="https://policies.google.com/terms/generative-ai/use-policy"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="underline hover:text-zinc-400 transition-colors"
-            >
-              Prohibited Use Policy
-            </a>.
-          </p>
-          <p>
-            Please note that uploads from Google Workspace may be used to develop and improve Google products and services in accordance with our terms.
-          </p>
+      {/* FOOTER — Clean, modern studio bar with minimal text */}
+      <footer id="studio-footer" className="shrink-0 border-t border-zinc-800/80 bg-zinc-950/90 px-6 md:px-10 py-3.5 flex flex-col sm:flex-row items-center justify-between gap-2.5 font-mono text-xs text-zinc-500">
+        <div className="flex items-center gap-3">
+          <span className="flex items-center gap-2 font-medium text-zinc-300">
+            <span className="w-1.5 h-1.5 rounded-full bg-emerald-400" />
+            Omni Product Studio
+          </span>
+          <span className="text-zinc-700">•</span>
+          <span className="text-zinc-500 text-[11px]">Gemini Omni 1.1 Flash</span>
+        </div>
+
+        <div className="flex items-center gap-3 text-[11px] text-zinc-500">
+          <span>AI Commercial Generation</span>
+          <span className="text-zinc-700">•</span>
+          <a
+            href="https://policies.google.com/terms/generative-ai/use-policy"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-zinc-400 hover:text-white transition-colors underline underline-offset-4"
+          >
+            Prohibited Use Policy
+          </a>
         </div>
       </footer>
 
