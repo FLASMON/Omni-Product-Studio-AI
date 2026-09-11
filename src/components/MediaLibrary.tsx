@@ -355,7 +355,7 @@ export function MediaLibrary({
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.98, y: 8 }}
               transition={{ duration: 0.22, ease: [0.22, 0.61, 0.36, 1] }}
-              className="relative flex max-h-full w-full max-w-5xl flex-col overflow-hidden rounded-3xl border border-zinc-700/70 bg-zinc-950 shadow-2xl shadow-black/80"
+              className="relative flex max-h-full w-full max-w-5xl flex-col overflow-hidden rounded-lg border border-zinc-700/70 bg-zinc-950 shadow-2xl shadow-black/80"
             >
               {/* Modal header */}
               <div className="flex shrink-0 items-center justify-between gap-4 border-b border-zinc-800 px-5 py-3.5">

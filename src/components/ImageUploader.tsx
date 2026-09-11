@@ -290,8 +290,8 @@ export function ImageUploader({
             tabIndex={0}
             className={`group relative border border-dashed rounded-xl p-5 text-center transition-all duration-200 cursor-pointer overflow-hidden ${
               dragging
-                ? 'border-zinc-300 bg-zinc-800/80 scale-[1.01] shadow-lg shadow-white/5'
-                : 'border-zinc-800 hover:border-zinc-600 bg-zinc-950/70 hover:bg-zinc-900'
+                ? 'border-zinc-300 bg-zinc-800 scale-[1.01] shadow-lg shadow-white/5'
+                : 'border-zinc-700/80 bg-zinc-900/70 hover:border-zinc-500 hover:bg-zinc-800/80'
             }`}
           >
             {/* Glow halo behind the icon while dragging */}
@@ -302,10 +302,10 @@ export function ImageUploader({
               <div className={`w-9 h-9 rounded-xl flex items-center justify-center border transition-all duration-200 ${
                 dragging
                   ? 'bg-white text-zinc-950 border-white scale-110'
-                  : 'bg-zinc-900 border-zinc-800 group-hover:border-zinc-600 group-hover:bg-zinc-800 group-hover:scale-105'
+                  : 'bg-zinc-800 border-zinc-700 group-hover:border-zinc-500 group-hover:bg-zinc-700 group-hover:scale-105'
               }`}>
                 <Upload className={`w-4 h-4 transition-colors ${
-                  dragging ? 'text-zinc-950' : 'text-zinc-400 group-hover:text-zinc-200'
+                  dragging ? 'text-zinc-950' : 'text-zinc-300 group-hover:text-white'
                 }`} />
               </div>
               <span className={`text-xs transition-colors ${
@@ -315,7 +315,7 @@ export function ImageUploader({
                   ? 'Release to upload'
                   : <>Drop image here or <span className="underline underline-offset-4 text-zinc-400 group-hover:text-zinc-200">browse</span></>}
               </span>
-              <span className="text-[10px] text-zinc-600">
+              <span className="text-[10px] text-zinc-500">
                 JPEG, PNG, WebP up to 10MB
               </span>
             </div>

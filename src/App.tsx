@@ -838,7 +838,7 @@ export default function App() {
               animate={{ y: 0 }}
               exit={{ y: '8%' }}
               transition={{ duration: 0.24, ease: [0.22, 0.61, 0.36, 1] }}
-              className="relative flex h-[86vh] w-full flex-col overflow-hidden rounded-t-3xl border-t border-zinc-700 bg-zinc-900 shadow-2xl shadow-black"
+              className="relative flex h-[86vh] w-full flex-col overflow-hidden rounded-t-lg border-t border-zinc-700 bg-zinc-900 shadow-2xl shadow-black"
             >
               <div className="relative shrink-0 px-5 pb-1 pt-3">
                 <span className="mx-auto block h-1 w-10 rounded-full bg-zinc-700" />
