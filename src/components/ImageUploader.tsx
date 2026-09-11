@@ -107,35 +107,35 @@ export function ImageUploader({
       id={`${type}-uploader-card`}
       className={`mb-6 p-5 rounded-2xl border transition-all duration-200 ${
         hasSelection
-          ? 'bg-zinc-900/40 border-zinc-700/60 shadow-lg shadow-black/20'
-          : 'bg-zinc-900/25 border-zinc-800/80 hover:border-zinc-750'
+          ? 'bg-zinc-950 border-zinc-700 shadow-lg shadow-black/30'
+          : 'bg-zinc-950/70 border-zinc-800 hover:border-zinc-700'
       }`}
     >
       {/* CARD HEADER */}
       <div className="flex items-center justify-between mb-4">
         <div className="flex items-center gap-2.5">
           {stepNumber && (
-            <span className="w-5 h-5 rounded-md bg-zinc-800/90 border border-zinc-700/60 text-zinc-300 font-mono text-[11px] font-bold flex items-center justify-center">
+            <span className="w-5 h-5 rounded-md bg-zinc-800 border border-zinc-700 text-zinc-300 text-[11px] font-semibold flex items-center justify-center shadow-sm">
               {stepNumber}
             </span>
           )}
-          <h2 className="text-xs font-bold uppercase tracking-wider text-zinc-200 font-mono flex items-center gap-2">
+          <h2 className="text-xs font-semibold uppercase tracking-wider text-zinc-200 flex items-center gap-2">
             <span>{title}</span>
           </h2>
         </div>
 
         {hasSelection ? (
-          <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10px] font-mono font-medium tracking-wide bg-emerald-950/60 text-emerald-400 border border-emerald-800/60">
+          <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10px] font-medium tracking-wide bg-emerald-500/10 text-emerald-300 border border-emerald-500/30">
             <CheckCircle2 className="w-3 h-3 text-emerald-400" />
             Configured
           </span>
         ) : generating ? (
-          <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10px] font-mono text-amber-300 bg-amber-950/40 border border-amber-800/50">
+          <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10px] font-medium text-amber-300 bg-amber-500/10 border border-amber-500/30">
             <Loader2 className="w-3 h-3 animate-spin text-amber-400" />
             Generating...
           </span>
         ) : (
-          <span className="text-[10px] font-mono tracking-wider uppercase text-zinc-500">
+          <span className="text-[10px] font-medium tracking-wider uppercase text-zinc-500">
             Required
           </span>
         )}
@@ -148,7 +148,7 @@ export function ImageUploader({
             <img
               src={selection.images[0]}
               alt={selection.description}
-              className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500 ease-out"
+              className="w-full h-full object-cover group-hover:scale-[1.04] transition-transform duration-700 ease-out"
               referrerPolicy="no-referrer"
             />
 
@@ -156,7 +156,7 @@ export function ImageUploader({
               <button
                 id={`remove-${type}-image-btn`}
                 onClick={handleClear}
-                className="absolute top-2.5 right-2.5 p-1.5 bg-black/80 hover:bg-red-950/80 text-zinc-400 hover:text-red-300 rounded-full transition-colors border border-zinc-800 hover:border-red-800/80 backdrop-blur-sm"
+                className="absolute top-2.5 right-2.5 p-1.5 bg-black/80 hover:bg-red-950/80 text-zinc-400 hover:text-red-300 rounded-full transition-colors border border-zinc-700 hover:border-red-800/80 backdrop-blur-sm shadow-sm"
                 aria-label="Remove image"
                 title="Remove image"
               >
@@ -164,14 +164,14 @@ export function ImageUploader({
               </button>
             )}
 
-            <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/95 via-black/75 to-transparent p-3 pt-6">
+            <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/95 via-black/75 to-transparent p-3 pt-8">
               <div className="flex items-center gap-1.5 mb-1">
                 <ImageIcon className="w-3 h-3 text-zinc-400" />
-                <span className="text-[10px] font-mono uppercase tracking-widest text-zinc-400">
+                <span className="text-[10px] font-medium uppercase tracking-widest text-zinc-400">
                   {selection.source === 'upload' ? 'Custom Upload' : 'Selected Preset'}
                 </span>
               </div>
-              <p className="text-xs font-mono text-zinc-200 line-clamp-2 leading-relaxed">
+              <p className="text-xs text-zinc-200 line-clamp-2 leading-relaxed">
                 {selection.description}
               </p>
             </div>
@@ -181,7 +181,7 @@ export function ImageUploader({
             <button
               id={`reset-${type}-btn`}
               onClick={handleClear}
-              className="w-full py-2.5 px-5 font-mono text-xs uppercase tracking-wider text-zinc-400 hover:text-zinc-100 transition-all bg-zinc-900/60 hover:bg-zinc-800/80 border border-zinc-800/80 hover:border-zinc-700 rounded-xl flex items-center justify-center gap-2"
+              className="w-full py-2.5 px-5 text-xs font-medium uppercase tracking-wider text-zinc-400 hover:text-zinc-100 transition-all bg-zinc-900 hover:bg-zinc-800 border border-zinc-800 hover:border-zinc-700 rounded-xl flex items-center justify-center gap-2"
             >
               <RotateCcw className="w-3.5 h-3.5 text-zinc-500" />
               Replace Reference
@@ -193,7 +193,7 @@ export function ImageUploader({
         <div className="space-y-4">
           {/* PROMPT TEXTAREA */}
           <div className="space-y-2">
-            <div className="flex items-center justify-between text-[11px] font-mono">
+            <div className="flex items-center justify-between text-[11px]">
               <label htmlFor={`${type}-prompt-input`} className="uppercase tracking-wider text-zinc-300 font-semibold flex items-center gap-1.5">
                 <Sparkles className="w-3 h-3 text-zinc-400" />
                 <span>Prompt Directive</span>
@@ -211,14 +211,14 @@ export function ImageUploader({
                 disabled={disabled || generating}
                 placeholder={`Describe desired ${type} (e.g., "${type === 'product' ? 'ceramic tumbler with matte textured glaze' : 'sunlit travertine plinth with warm palms'}"...)`}
                 rows={3}
-                className="w-full bg-zinc-950/90 hover:bg-zinc-950 focus:bg-zinc-950 border border-zinc-800 hover:border-zinc-700 focus:border-zinc-400 text-zinc-100 p-4 font-mono text-xs leading-relaxed focus:outline-none focus:ring-2 focus:ring-white/10 rounded-xl resize-none placeholder:text-zinc-600 transition-all shadow-inner"
+                className="w-full bg-zinc-950 hover:bg-zinc-950 focus:bg-zinc-950 border border-zinc-800 hover:border-zinc-600 focus:border-zinc-500 text-zinc-100 p-4 text-xs leading-relaxed focus:outline-none focus:ring-2 focus:ring-white/15 rounded-xl resize-none placeholder:text-zinc-600 transition-all shadow-inner disabled:opacity-60"
               />
             </div>
           </div>
 
           {/* SUGGESTION CHIPS */}
           <div className="space-y-2">
-            <p className="text-[10px] font-mono uppercase tracking-wider text-zinc-500">
+            <p className="text-[10px] font-medium uppercase tracking-wider text-zinc-500">
               Curated Presets
             </p>
             <div className="flex flex-wrap gap-1.5">
@@ -230,10 +230,10 @@ export function ImageUploader({
                     key={item.id}
                     onClick={() => handleChipClick(item)}
                     disabled={disabled || generating}
-                    className={`px-3 py-1.5 text-[11px] font-mono rounded-lg border transition-all duration-150 ${
+                    className={`px-3 py-1.5 text-[11px] font-medium rounded-lg border transition-all duration-150 ${
                       isSelected
-                        ? 'bg-white text-zinc-950 border-white font-bold shadow-sm scale-[1.02]'
-                        : 'bg-zinc-900/70 text-zinc-400 border-zinc-800/90 hover:border-zinc-700 hover:text-zinc-200 hover:bg-zinc-850'
+                        ? 'bg-white text-zinc-950 border-white font-semibold shadow-md shadow-white/10 scale-[1.02]'
+                        : 'bg-zinc-900 text-zinc-400 border-zinc-800 hover:border-zinc-600 hover:text-zinc-200 hover:bg-zinc-800'
                     }`}
                   >
                     {item.label}
@@ -248,7 +248,7 @@ export function ImageUploader({
             id={`generate-${type}-btn`}
             onClick={handleGenerate}
             disabled={disabled || generating || !promptText.trim()}
-            className="w-full flex items-center justify-center gap-2.5 py-3.5 px-6 bg-white hover:bg-zinc-100 text-zinc-950 font-mono text-xs font-bold uppercase tracking-wider rounded-xl transition-all duration-150 shadow-sm hover:shadow-md active:scale-[0.98] border border-white disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:bg-white disabled:shadow-none"
+            className="w-full flex items-center justify-center gap-2.5 py-3.5 px-6 bg-white hover:bg-zinc-100 text-zinc-950 text-xs font-semibold uppercase tracking-wider rounded-xl transition-all duration-150 shadow-lg shadow-black/25 hover:shadow-xl hover:shadow-white/10 active:scale-[0.98] border border-white disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:bg-white disabled:shadow-none"
           >
             {generating ? (
               <>
@@ -265,11 +265,11 @@ export function ImageUploader({
 
           {/* DIVIDER */}
           <div className="relative flex py-1 items-center">
-            <div className="flex-grow border-t border-zinc-800/80"></div>
-            <span className="flex-shrink mx-3 text-[10px] font-mono uppercase tracking-widest text-zinc-500">
+            <div className="flex-grow border-t border-zinc-800"></div>
+            <span className="flex-shrink mx-3 text-[10px] font-medium uppercase tracking-widest text-zinc-500">
               or upload file
             </span>
-            <div className="flex-grow border-t border-zinc-800/80"></div>
+            <div className="flex-grow border-t border-zinc-800"></div>
           </div>
 
           {/* DRAG AND DROP UPLOAD ZONE */}
@@ -288,27 +288,41 @@ export function ImageUploader({
             }}
             role="button"
             tabIndex={0}
-            className={`group border border-dashed rounded-xl p-4 text-center transition-all cursor-pointer ${
+            className={`group relative border border-dashed rounded-xl p-5 text-center transition-all duration-200 cursor-pointer overflow-hidden ${
               dragging
-                ? 'border-zinc-400 bg-zinc-800/50 scale-[1.01]'
-                : 'border-zinc-800/90 hover:border-zinc-700 bg-zinc-950/30 hover:bg-zinc-900/30'
+                ? 'border-zinc-300 bg-zinc-800/80 scale-[1.01] shadow-lg shadow-white/5'
+                : 'border-zinc-800 hover:border-zinc-600 bg-zinc-950/70 hover:bg-zinc-900'
             }`}
           >
-            <div className="flex flex-col items-center justify-center gap-1.5">
-              <div className="w-8 h-8 rounded-full bg-zinc-900 border border-zinc-800 flex items-center justify-center group-hover:border-zinc-700 group-hover:scale-105 transition-all">
-                <Upload className="w-3.5 h-3.5 text-zinc-400 group-hover:text-zinc-200 transition-colors" />
+            {/* Glow halo behind the icon while dragging */}
+            {dragging && (
+              <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,rgba(255,255,255,0.08),transparent_70%)] pointer-events-none" />
+            )}
+            <div className="relative flex flex-col items-center justify-center gap-2">
+              <div className={`w-9 h-9 rounded-xl flex items-center justify-center border transition-all duration-200 ${
+                dragging
+                  ? 'bg-white text-zinc-950 border-white scale-110'
+                  : 'bg-zinc-900 border-zinc-800 group-hover:border-zinc-600 group-hover:bg-zinc-800 group-hover:scale-105'
+              }`}>
+                <Upload className={`w-4 h-4 transition-colors ${
+                  dragging ? 'text-zinc-950' : 'text-zinc-400 group-hover:text-zinc-200'
+                }`} />
               </div>
-              <span className="font-mono text-xs text-zinc-300 group-hover:text-white transition-colors">
-                Drop image here or <span className="underline underline-offset-4 text-zinc-400 group-hover:text-zinc-200">browse</span>
+              <span className={`text-xs transition-colors ${
+                dragging ? 'text-white' : 'text-zinc-300 group-hover:text-white'
+              }`}>
+                {dragging
+                  ? 'Release to upload'
+                  : <>Drop image here or <span className="underline underline-offset-4 text-zinc-400 group-hover:text-zinc-200">browse</span></>}
               </span>
-              <span className="font-mono text-[10px] text-zinc-600">
+              <span className="text-[10px] text-zinc-600">
                 JPEG, PNG, WebP up to 10MB
               </span>
             </div>
           </div>
 
           {error && (
-            <div className="text-xs font-mono text-red-300 bg-red-950/30 border border-red-900/50 p-3 rounded-xl flex items-start gap-2">
+            <div className="text-xs text-red-300 bg-red-950/40 border border-red-900/60 p-3 rounded-xl flex items-start gap-2">
               <span className="text-red-400 shrink-0">✕</span>
               <p className="leading-relaxed">{error}</p>
             </div>
