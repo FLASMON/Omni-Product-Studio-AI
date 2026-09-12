@@ -179,7 +179,7 @@ button:disabled, a[aria-disabled="true"] {
   }
 }
 
-/* Auth error border — une seule bordure solid, snack animé, collée sur la card (place correcte) */
+/* Auth error border — une seule bordure solid, snack animé, collée sur la card (place correcte) — glass 2xl */
 @property --snake-angle {
   syntax: "<angle>";
   initial-value: 0deg;
@@ -189,7 +189,7 @@ button:disabled, a[aria-disabled="true"] {
   --snake-angle: 0deg;
   position: absolute;
   inset: 0;
-  border-radius: 0.5rem;
+  border-radius: 1rem;
   padding: 1.6px;
   background: conic-gradient(from var(--snake-angle), transparent 0deg 55deg, #ff4d4f 88deg 138deg, #ff6b6e 142deg 148deg, transparent 168deg 360deg);
   -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
