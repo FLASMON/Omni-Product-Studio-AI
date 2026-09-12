@@ -885,22 +885,22 @@ CRITICAL RULES:
               </span>
               <div className="min-w-0">
                 <h3 className="text-sm font-semibold text-white leading-tight">Transition Technique</h3>
-                <p className="text-[11px] text-zinc-500 leading-tight">6 moves · single uncut shot</p>
+                <p className="text-[11px] text-zinc-300 leading-tight">6 moves · single uncut shot</p>
               </div>
             </div>
             <button
               onClick={() => setTechnique(null)}
               disabled={!technique}
               title="Clear selection"
-              className="w-8 h-8 shrink-0 grid place-items-center rounded-lg border border-zinc-800 bg-zinc-900 text-zinc-400 hover:text-primary hover:bg-primary/10 hover:border-primary/40 disabled:opacity-30 transition-colors"
+              className="w-8 h-8 shrink-0 grid place-items-center rounded-lg border border-zinc-800 bg-zinc-900 text-zinc-300 hover:text-primary hover:bg-primary/10 hover:border-primary/40 disabled:opacity-30 transition-colors cursor-pointer"
             >
               <RotateCcw size={13} />
             </button>
           </div>
           <div className="flex-1 min-h-0 overflow-y-auto thin-scrollbar p-5 space-y-5">
             <div>
-              <p className="text-[11px] font-bold uppercase tracking-widest text-zinc-400 mb-3">Technique</p>
-              <div className="flex flex-wrap gap-1.5">
+              <p className="text-[11px] font-bold uppercase tracking-widest text-white mb-3">Technique</p>
+              <div className="grid grid-cols-2 gap-2">
                 {TRANSITIONS.map((t) => {
                   const isActive = technique === t.id;
                   return (
@@ -909,7 +909,7 @@ CRITICAL RULES:
                       onClick={() => setTechnique(isActive ? null : t.id)}
                       disabled={isGenerating}
                       title={t.hint}
-                      className={`px-3 py-1.5 rounded-lg text-xs border transition-all disabled:opacity-30 font-medium tracking-wide ${isActive ? 'bg-primary border-primary text-white shadow-md shadow-primary/20 scale-[1.02]' : 'border-zinc-700 bg-zinc-950 text-zinc-400 hover:border-primary/50 hover:text-primary hover:bg-primary/10'}`}
+                      className={`px-3 py-2.5 rounded-xl text-xs border transition-all disabled:opacity-30 font-medium tracking-wide text-center leading-tight cursor-pointer ${isActive ? 'bg-primary border-primary text-white shadow-md shadow-primary/20 scale-[1.02]' : 'border-zinc-700 bg-zinc-950 text-white hover:border-primary/50 hover:text-white hover:bg-primary/10'}`}
                     >
                       {t.name}
                     </button>
@@ -918,15 +918,15 @@ CRITICAL RULES:
               </div>
               {technique ? (
                 <div className="mt-3 rounded-xl bg-zinc-950 border border-zinc-800 p-3">
-                  <p className="text-[11px] leading-relaxed text-zinc-300">{TRANSITIONS.find((t) => t.id === technique)?.hint}</p>
+                  <p className="text-[11px] leading-relaxed text-white">{TRANSITIONS.find((t) => t.id === technique)?.hint}</p>
                 </div>
               ) : (
-                <p className="mt-3 text-[11px] leading-relaxed text-zinc-600">Pick one — or leave empty for <span className="text-zinc-300">Director’s Choice</span> (AI picks best move).</p>
+                <p className="mt-3 text-[11px] leading-relaxed text-zinc-300">Pick one — or leave empty for <span className="text-white">Director’s Choice</span> (AI picks best move).</p>
               )}
             </div>
             <div className="rounded-xl border border-zinc-800 bg-zinc-950 p-3">
-              <p className="text-[11px] font-semibold uppercase tracking-wider text-zinc-400 mb-2 flex items-center gap-1.5"><Sparkles size={11} className="text-zinc-600" /> How it works</p>
-              <ul className="space-y-2 text-[11px] leading-relaxed text-zinc-500 list-disc list-inside marker:text-zinc-600">
+              <p className="text-[11px] font-semibold uppercase tracking-wider text-white mb-2 flex items-center gap-1.5"><Sparkles size={11} className="text-zinc-400" /> How it works</p>
+              <ul className="space-y-2 text-[11px] leading-relaxed text-zinc-300 list-disc list-inside marker:text-zinc-500">
                 <li>Single continuous camera move — no cuts.</li>
                 <li>Starts exactly on Head Frame, ends on Tail Frame.</li>
                 <li>Style References guide look, never copied.</li>
@@ -940,8 +940,8 @@ CRITICAL RULES:
                     <Wand2 size={13} className="text-primary" />
                   </span>
                   <div>
-                    <p className="text-[11px] font-bold uppercase tracking-widest text-zinc-200">Direction Note</p>
-                    <p className="text-[11px] text-zinc-500">Camera pace, lighting, mood</p>
+                    <p className="text-[11px] font-bold uppercase tracking-widest text-white">Direction Note</p>
+                    <p className="text-[11px] text-zinc-300">Camera pace, lighting, mood</p>
                   </div>
                 </div>
                 <span className={`text-[10px] font-mono px-2 py-1 rounded-full border ${prompt.trim().length > 0 ? 'bg-primary/10 border-primary/25 text-primary' : 'bg-zinc-900 border-zinc-800 text-zinc-600'}`}>
@@ -956,8 +956,8 @@ CRITICAL RULES:
                 placeholder="Describe the move — e.g. “slow push-in, warm golden hour, shallow depth of field, gentle drift. Keep motion continuous, no cuts.”"
                 className="w-full min-h-[96px] max-h-[160px] bg-zinc-900 border border-zinc-800 rounded-xl px-3.5 py-3 text-xs leading-relaxed text-white placeholder:text-zinc-500 outline-none resize-none focus:border-primary/40 focus:bg-zinc-950 transition-colors disabled:opacity-40"
               />
-              <p className="text-[11px] text-zinc-500 leading-relaxed flex items-center gap-1.5">
-                <Sparkles size={11} className="text-zinc-600" />
+              <p className="text-[11px] text-zinc-300 leading-relaxed flex items-center gap-1.5">
+                <Sparkles size={11} className="text-zinc-400" />
                 {technique ? `${TRANSITIONS.find((t) => t.id === technique)?.name} will lead` : 'Director’s Choice if empty'}
               </p>
               <button
@@ -979,9 +979,9 @@ CRITICAL RULES:
             )}
           </div>
           <div className="shrink-0 p-3 border-t border-zinc-800 bg-zinc-950">
-            <div className="flex items-center justify-between text-[11px] text-zinc-500">
+            <div className="flex items-center justify-between text-[11px] text-white">
               <span className="flex items-center gap-1.5"><span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" /> Ready</span>
-              <span className="font-mono text-zinc-400">{technique ? TRANSITIONS.find((t) => t.id === technique)?.name : 'Director’s Choice'}</span>
+              <span className="font-mono text-white">{technique ? TRANSITIONS.find((t) => t.id === technique)?.name : 'Director’s Choice'}</span>
             </div>
           </div>
         </div>
@@ -1001,12 +1001,12 @@ CRITICAL RULES:
                 <span className="w-8 h-8 rounded-lg bg-zinc-800 border border-zinc-700 grid place-items-center"><SlidersHorizontal className="w-4 h-4 text-zinc-300" /></span>
                 <div>
                   <h3 className="text-sm font-semibold text-white">Transition Technique</h3>
-                  <p className="text-[11px] text-zinc-500">6 moves · single uncut shot</p>
+                  <p className="text-[11px] text-zinc-300">6 moves · single uncut shot</p>
                 </div>
               </div>
             </div>
             <div className="flex-1 min-h-0 overflow-y-auto thin-scrollbar p-5 space-y-4">
-              <div className="flex flex-wrap gap-1.5">
+              <div className="grid grid-cols-2 gap-2">
                 {TRANSITIONS.map((t) => {
                   const isActive = technique === t.id;
                   return (
@@ -1014,7 +1014,7 @@ CRITICAL RULES:
                       key={t.id}
                       onClick={() => setTechnique(isActive ? null : t.id)}
                       disabled={isGenerating}
-                      className={`px-3 py-1.5 rounded-lg text-xs border font-medium ${isActive ? 'bg-primary border-primary text-white' : 'border-zinc-700 bg-zinc-950 text-zinc-400'}`}
+                      className={`px-3 py-2.5 rounded-xl text-xs border font-medium text-center leading-tight cursor-pointer ${isActive ? 'bg-primary border-primary text-white shadow-md' : 'border-zinc-700 bg-zinc-950 text-white hover:border-primary/50 hover:text-white hover:bg-primary/10'}`}
                     >
                       {t.name}
                     </button>
