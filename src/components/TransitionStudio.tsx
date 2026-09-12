@@ -14,6 +14,8 @@ import {
   X,
   History,
   Clock,
+  SlidersHorizontal,
+  RotateCcw as ResetIcon,
 } from 'lucide-react';
 
 /* ── Types ──────────────────────────────────────────────────────────────── */
@@ -155,6 +157,8 @@ export function TransitionStudio(props: TransitionStudioProps = {}) {
   const [internalActiveId, setInternalActiveId] = useState<string | null>(null);
   const [dragOver1, setDragOver1] = useState(false);
   const [dragOver2, setDragOver2] = useState(false);
+  const [techniquePanelOpen, setTechniquePanelOpen] = useState(true);
+  const [techniqueSheetOpen, setTechniqueSheetOpen] = useState(false);
 
   const history = props.history ?? internalHistory;
   const setHistory = props.setHistory ?? setInternalHistory;
@@ -171,6 +175,13 @@ export function TransitionStudio(props: TransitionStudioProps = {}) {
       if (item.prompt && !prompt) setPrompt(item.prompt);
     }
   }, [activeHistoryId, history]);
+
+  useEffect(() => {
+    if (!techniqueSheetOpen) return;
+    const prev = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+    return () => { document.body.style.overflow = prev; };
+  }, [techniqueSheetOpen]);
 
   const fileInput1Ref = useRef<HTMLInputElement>(null);
   const fileInput2Ref = useRef<HTMLInputElement>(null);
@@ -675,7 +686,13 @@ CRITICAL RULES:
             {segments.length > 0 && <span className="text-zinc-300 font-medium">{segments.length * 10}s generated</span>}
             {history.length > 0 && <span className="hidden lg:inline-flex items-center gap-1.5 ml-2 pl-2 border-l border-zinc-800 text-[11px] text-zinc-400"><History size={11} /> {history.length} in Library</span>}
           </div>
-          <div className="flex items-center gap-2.5 ml-auto">
+          <div className="flex items-center gap-2 ml-auto">
+            <button
+              onClick={() => setTechniqueSheetOpen(true)}
+              className="md:hidden inline-flex items-center gap-1.5 rounded-lg border border-zinc-800 bg-zinc-900 px-3 py-2 text-xs font-medium text-zinc-300 hover:border-primary/40 hover:text-primary active:scale-[0.98] transition-colors"
+            >
+              <SlidersHorizontal size={12} /> Techniques
+            </button>
             <button
               onClick={handleStartOver}
               disabled={isGenerating || (!image1 && !image2 && references.length === 0 && segments.length === 0 && !prompt && !technique)}
@@ -684,6 +701,16 @@ CRITICAL RULES:
             >
               <RotateCcw size={13} strokeWidth={2} />
               Start Over
+            </button>
+            <button
+              id="transition-technique-toggle"
+              onClick={() => setTechniquePanelOpen((o) => !o)}
+              aria-pressed={techniquePanelOpen}
+              aria-label={techniquePanelOpen ? 'Collapse technique panel' : 'Expand technique panel'}
+              title={techniquePanelOpen ? 'Collapse technique panel' : 'Expand technique panel'}
+              className={`hidden md:flex w-8 h-8 items-center justify-center rounded-lg border transition-colors ${techniquePanelOpen ? 'border-primary/60 bg-primary/10 text-primary hover:bg-primary/20' : 'border-zinc-700 bg-zinc-800 text-zinc-500 hover:border-primary/50 hover:text-primary'}`}
+            >
+              <SlidersHorizontal className="w-4 h-4" />
             </button>
             <button
               onClick={handleExport}
@@ -785,78 +812,6 @@ CRITICAL RULES:
 
         {/* ── CONTROL CONSOLE ──────────────────────────────────────────── */}
         <div className="p-4 lg:px-6 lg:py-4 border-t border-zinc-800 bg-zinc-900 shrink-0">
-          <div className="max-w-5xl mx-auto mb-3">
-            <div className="flex items-center justify-between mb-2">
-              <span className="text-[10px] uppercase tracking-widest text-zinc-500 font-bold">Transition Technique</span>
-              {technique && (
-                <span className="inline-flex items-center gap-1.5 rounded-full bg-primary/15 border border-primary/30 px-2.5 py-0.5 text-[10px] font-semibold text-primary">
-                  <Wand2 size={11} /> {TRANSITIONS.find((t) => t.id === technique)?.name}
-                </span>
-              )}
-            </div>
-            <div className="flex flex-wrap gap-1.5">
-              {TRANSITIONS.map((t) => {
-                const isActive = technique === t.id;
-                return (
-                  <button
-                    key={t.id}
-                    onClick={() => setTechnique(isActive ? null : t.id)}
-                    disabled={isGenerating}
-                    title={t.hint}
-                    className={`px-3 py-1.5 rounded-lg text-xs transition-all duration-150 border disabled:opacity-30 font-medium tracking-wide ${isActive ? 'bg-primary border-primary text-on-primary shadow-md shadow-primary/20 scale-[1.02]' : 'border-zinc-700 bg-zinc-950 text-zinc-400 hover:border-primary/50 hover:text-primary hover:bg-primary/10'}`}
-                  >
-                    {t.name}
-                  </button>
-                );
-              })}
-            </div>
-            {technique && (
-              <p className="mt-2 text-[11px] leading-relaxed text-zinc-500 max-w-3xl">{TRANSITIONS.find((t) => t.id === technique)?.hint}</p>
-            )}
-          </div>
-
-          <div className="max-w-5xl mx-auto">
-            <div className="group relative flex flex-col gap-3 rounded-2xl border border-zinc-800 bg-zinc-950 p-3 sm:p-4 transition-all duration-200 focus-within:border-primary/50 focus-within:bg-zinc-900/50 focus-within:shadow-lg focus-within:shadow-primary/5 hover:border-zinc-700">
-              <div className="flex items-center justify-between gap-3">
-                <div className="flex items-center gap-2.5">
-                  <span className="w-7 h-7 rounded-lg bg-primary/10 border border-primary/20 grid place-items-center">
-                    <Wand2 size={13} className="text-primary" />
-                  </span>
-                  <div>
-                    <p className="text-[11px] font-bold uppercase tracking-widest text-zinc-200">Direction Note</p>
-                    <p className="text-[11px] text-zinc-500 hidden sm:block">Camera pace, lighting, velocity, mood — free form</p>
-                  </div>
-                </div>
-                <span className={`text-[10px] font-mono px-2 py-1 rounded-full border ${prompt.trim().length > 0 ? 'bg-primary/10 border-primary/25 text-primary' : 'bg-zinc-900 border-zinc-800 text-zinc-600'}`}>
-                  {prompt.trim().length} chars
-                </span>
-              </div>
-              <textarea
-                value={prompt}
-                onChange={(e) => setPrompt(e.target.value)}
-                disabled={isGenerating}
-                rows={3}
-                placeholder="Describe the move you want — e.g. “slow push-in, warm golden hour, shallow depth of field, gentle camera drift. Keep motion continuous, no cuts.”"
-                className="w-full min-h-[84px] max-h-[160px] bg-zinc-900 border border-zinc-800 rounded-xl px-3.5 py-3 text-xs leading-relaxed text-white placeholder:text-zinc-500 outline-none resize-none focus:border-primary/40 focus:bg-zinc-950 transition-colors disabled:opacity-40"
-              />
-              <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3">
-                <p className="text-[11px] text-zinc-500 leading-relaxed flex items-center gap-1.5">
-                  <Sparkles size={11} className="text-zinc-600" />
-                  {technique ? `Technique: ${TRANSITIONS.find((t) => t.id === technique)?.name} will lead` : 'Pick a technique above or let Director’s Choice decide'}
-                </p>
-                <button
-                  onClick={handleGenerate}
-                  disabled={!canGenerate}
-                  title={!image1 || !image2 ? 'Select both frames first' : !prompt.trim() && !technique ? 'Pick a technique or add a direction note' : undefined}
-                  className="bg-primary hover:bg-primary-hover text-on-primary font-bold text-xs px-6 py-3 rounded-lg inline-flex items-center justify-center gap-2 transition-all disabled:opacity-30 disabled:cursor-not-allowed shrink-0 uppercase tracking-wider shadow-lg shadow-primary/20 active:scale-[0.98] sm:self-end"
-                >
-                  <span>Render Transition</span>
-                  <ArrowRight size={13} strokeWidth={2.5} />
-                </button>
-              </div>
-            </div>
-          </div>
-
           {segments.length > 0 && (
             <div className="max-w-5xl mx-auto mt-4 rounded-2xl border border-zinc-800 bg-zinc-950 p-3">
               <div className="flex items-center justify-between gap-3 mb-2.5">
@@ -914,6 +869,169 @@ CRITICAL RULES:
           )}
         </div>
       </main>
+
+      {/* ── RIGHT: Transition Technique — exact Studio Build panel, collapsible ────── */}
+      <aside
+        id="technique-panel"
+        className={`hidden md:flex md:shrink-0 flex-col border-l border-zinc-800 bg-zinc-900 transition-[width] duration-300 ease-in-out overflow-hidden ${
+          techniquePanelOpen ? 'md:w-[340px]' : 'md:w-0 border-l-0'
+        }`}
+      >
+        <div className={techniquePanelOpen ? 'w-[340px] h-full min-h-0 flex flex-col' : 'w-0 h-full min-h-0 flex flex-col'}>
+          <div className="flex items-center justify-between gap-2 px-5 py-4 border-b border-zinc-800">
+            <div className="flex items-center gap-2.5 min-w-0">
+              <span className="w-8 h-8 shrink-0 rounded-lg bg-zinc-800 border border-zinc-700 grid place-items-center">
+                <SlidersHorizontal className="w-4 h-4 text-zinc-300" />
+              </span>
+              <div className="min-w-0">
+                <h3 className="text-sm font-semibold text-white leading-tight">Transition Technique</h3>
+                <p className="text-[11px] text-zinc-500 leading-tight">6 moves · single uncut shot</p>
+              </div>
+            </div>
+            <button
+              onClick={() => setTechnique(null)}
+              disabled={!technique}
+              title="Clear selection"
+              className="w-8 h-8 shrink-0 grid place-items-center rounded-lg border border-zinc-800 bg-zinc-900 text-zinc-400 hover:text-primary hover:bg-primary/10 hover:border-primary/40 disabled:opacity-30 transition-colors"
+            >
+              <RotateCcw size={13} />
+            </button>
+          </div>
+          <div className="flex-1 min-h-0 overflow-y-auto thin-scrollbar p-5 space-y-5">
+            <div>
+              <p className="text-[11px] font-bold uppercase tracking-widest text-zinc-400 mb-3">Technique</p>
+              <div className="flex flex-wrap gap-1.5">
+                {TRANSITIONS.map((t) => {
+                  const isActive = technique === t.id;
+                  return (
+                    <button
+                      key={t.id}
+                      onClick={() => setTechnique(isActive ? null : t.id)}
+                      disabled={isGenerating}
+                      title={t.hint}
+                      className={`px-3 py-1.5 rounded-lg text-xs border transition-all disabled:opacity-30 font-medium tracking-wide ${isActive ? 'bg-primary border-primary text-white shadow-md shadow-primary/20 scale-[1.02]' : 'border-zinc-700 bg-zinc-950 text-zinc-400 hover:border-primary/50 hover:text-primary hover:bg-primary/10'}`}
+                    >
+                      {t.name}
+                    </button>
+                  );
+                })}
+              </div>
+              {technique ? (
+                <div className="mt-3 rounded-xl bg-zinc-950 border border-zinc-800 p-3">
+                  <p className="text-[11px] leading-relaxed text-zinc-300">{TRANSITIONS.find((t) => t.id === technique)?.hint}</p>
+                </div>
+              ) : (
+                <p className="mt-3 text-[11px] leading-relaxed text-zinc-600">Pick one — or leave empty for <span className="text-zinc-300">Director’s Choice</span> (AI picks best move).</p>
+              )}
+            </div>
+            <div className="rounded-xl border border-zinc-800 bg-zinc-950 p-3">
+              <p className="text-[11px] font-semibold uppercase tracking-wider text-zinc-400 mb-2 flex items-center gap-1.5"><Sparkles size={11} className="text-zinc-600" /> How it works</p>
+              <ul className="space-y-2 text-[11px] leading-relaxed text-zinc-500 list-disc list-inside marker:text-zinc-600">
+                <li>Single continuous camera move — no cuts.</li>
+                <li>Starts exactly on Head Frame, ends on Tail Frame.</li>
+                <li>Style References guide look, never copied.</li>
+              </ul>
+            </div>
+            {/* Direction Note — moved to right panel */}
+            <div className="rounded-2xl border border-zinc-800 bg-zinc-950 p-4 space-y-3">
+              <div className="flex items-center justify-between gap-3">
+                <div className="flex items-center gap-2.5">
+                  <span className="w-7 h-7 rounded-lg bg-primary/10 border border-primary/20 grid place-items-center">
+                    <Wand2 size={13} className="text-primary" />
+                  </span>
+                  <div>
+                    <p className="text-[11px] font-bold uppercase tracking-widest text-zinc-200">Direction Note</p>
+                    <p className="text-[11px] text-zinc-500">Camera pace, lighting, mood</p>
+                  </div>
+                </div>
+                <span className={`text-[10px] font-mono px-2 py-1 rounded-full border ${prompt.trim().length > 0 ? 'bg-primary/10 border-primary/25 text-primary' : 'bg-zinc-900 border-zinc-800 text-zinc-600'}`}>
+                  {prompt.trim().length}
+                </span>
+              </div>
+              <textarea
+                value={prompt}
+                onChange={(e) => setPrompt(e.target.value)}
+                disabled={isGenerating}
+                rows={4}
+                placeholder="Describe the move — e.g. “slow push-in, warm golden hour, shallow depth of field, gentle drift. Keep motion continuous, no cuts.”"
+                className="w-full min-h-[96px] max-h-[160px] bg-zinc-900 border border-zinc-800 rounded-xl px-3.5 py-3 text-xs leading-relaxed text-white placeholder:text-zinc-500 outline-none resize-none focus:border-primary/40 focus:bg-zinc-950 transition-colors disabled:opacity-40"
+              />
+              <p className="text-[11px] text-zinc-500 leading-relaxed flex items-center gap-1.5">
+                <Sparkles size={11} className="text-zinc-600" />
+                {technique ? `${TRANSITIONS.find((t) => t.id === technique)?.name} will lead` : 'Director’s Choice if empty'}
+              </p>
+              <button
+                onClick={handleGenerate}
+                disabled={!canGenerate}
+                title={!image1 || !image2 ? 'Select both frames first' : !prompt.trim() && !technique ? 'Pick a technique or add a direction note' : undefined}
+                className="w-full bg-primary hover:bg-primary-hover text-white font-bold text-xs px-6 py-3 rounded-lg inline-flex items-center justify-center gap-2 transition-all disabled:opacity-30 disabled:cursor-not-allowed uppercase tracking-wider shadow-lg shadow-primary/20 active:scale-[0.98]"
+              >
+                <span>Render Transition</span>
+                <ArrowRight size={13} strokeWidth={2.5} />
+              </button>
+              <p className="text-center text-[10px] text-zinc-600">Takes appear in <span className="text-zinc-400">Renders → Transitions</span></p>
+            </div>
+            {technique && (
+              <div className="flex items-center gap-2 rounded-lg bg-primary/10 border border-primary/20 px-3 py-2 text-xs">
+                <span className="w-2 h-2 rounded-full bg-primary animate-pulse" />
+                <span className="font-medium text-primary">{TRANSITIONS.find((t) => t.id === technique)?.name} active</span>
+              </div>
+            )}
+          </div>
+          <div className="shrink-0 p-3 border-t border-zinc-800 bg-zinc-950">
+            <div className="flex items-center justify-between text-[11px] text-zinc-500">
+              <span className="flex items-center gap-1.5"><span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" /> Ready</span>
+              <span className="font-mono text-zinc-400">{technique ? TRANSITIONS.find((t) => t.id === technique)?.name : 'Director’s Choice'}</span>
+            </div>
+          </div>
+        </div>
+      </aside>
+
+      {/* Mobile Technique Sheet */}
+      {techniqueSheetOpen && (
+        <div className="fixed inset-0 z-50 flex items-end md:hidden">
+          <div className="absolute inset-0 bg-black/70 backdrop-blur-sm" onClick={() => setTechniqueSheetOpen(false)} />
+          <div className="relative flex h-[78vh] w-full flex-col overflow-hidden rounded-t-2xl border-t border-zinc-700 bg-zinc-900 shadow-2xl shadow-black">
+            <div className="relative shrink-0 px-5 pb-2 pt-3">
+              <span className="mx-auto block h-1 w-10 rounded-full bg-zinc-700" />
+              <button type="button" onClick={() => setTechniqueSheetOpen(false)} aria-label="Close techniques" className="absolute right-4 top-3 grid h-8 w-8 place-items-center rounded-lg border border-zinc-800 bg-zinc-950 text-zinc-400">
+                <X className="h-4 w-4" />
+              </button>
+              <div className="mt-4 flex items-center gap-2.5">
+                <span className="w-8 h-8 rounded-lg bg-zinc-800 border border-zinc-700 grid place-items-center"><SlidersHorizontal className="w-4 h-4 text-zinc-300" /></span>
+                <div>
+                  <h3 className="text-sm font-semibold text-white">Transition Technique</h3>
+                  <p className="text-[11px] text-zinc-500">6 moves · single uncut shot</p>
+                </div>
+              </div>
+            </div>
+            <div className="flex-1 min-h-0 overflow-y-auto thin-scrollbar p-5 space-y-4">
+              <div className="flex flex-wrap gap-1.5">
+                {TRANSITIONS.map((t) => {
+                  const isActive = technique === t.id;
+                  return (
+                    <button
+                      key={t.id}
+                      onClick={() => setTechnique(isActive ? null : t.id)}
+                      disabled={isGenerating}
+                      className={`px-3 py-1.5 rounded-lg text-xs border font-medium ${isActive ? 'bg-primary border-primary text-white' : 'border-zinc-700 bg-zinc-950 text-zinc-400'}`}
+                    >
+                      {t.name}
+                    </button>
+                  );
+                })}
+              </div>
+              {technique && <p className="text-[11px] leading-relaxed text-zinc-300 p-3 rounded-xl bg-zinc-950 border border-zinc-800">{TRANSITIONS.find((t) => t.id === technique)?.hint}</p>}
+              <button
+                onClick={() => setTechniqueSheetOpen(false)}
+                className="w-full rounded-xl bg-primary py-3 text-xs font-bold uppercase tracking-wider text-white shadow-lg shadow-primary/20"
+              >
+                Done
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

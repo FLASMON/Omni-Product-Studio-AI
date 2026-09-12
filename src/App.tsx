@@ -1,6 +1,6 @@
 import React, { useState, useRef, useMemo, useEffect } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { Loader2, ArrowRight, ChevronRight, Download, Wand2, SlidersHorizontal, Sparkles, Clapperboard, Film, History, X, Sun, Moon, KeyRound } from 'lucide-react';
+import { Loader2, ArrowRight, ChevronRight, Download, Wand2, SlidersHorizontal, Sparkles, Clapperboard, Film, History, X, Sun, Moon, KeyRound, User, Settings, LogOut, ChevronDown, Facebook, MessageCircle, Globe, ExternalLink } from 'lucide-react';
 import { PRODUCTS, ATMOSPHERES, MediaSelection } from './data.js';
 import { ImageUploader } from './components/ImageUploader.js';
 import { VideoOutput } from './components/VideoOutput.js';
@@ -15,6 +15,18 @@ import { STOCK_VIDEOS, STOCK_CATEGORY_LABEL, FILTER_PREVIEW_STILL } from './stoc
 import { toInlineImages, InlineImage } from './images.js';
 import { NoticeBanner, NoticeCard } from './components/NoticeBanner.js';
 import { TransitionStudio, HistoryItem as TransitionHistoryItem } from './components/TransitionStudio.js';
+import { useAuth } from './components/AuthContext.js';
+import { LoginPage, SignupPage } from './components/AuthPages.js';
+
+function ModernSpinner({ size = 16, className = '' }: { size?: number; className?: string }) {
+  return (
+    <span className={`relative inline-flex items-center justify-center shrink-0 ${className}`} style={{ width: size, height: size }} aria-hidden>
+      <span className="absolute inset-0 rounded-full conic-spin" style={{ background: 'conic-gradient(from 0deg, rgba(230,0,35,0) 0%, #e60023 32%, rgba(230,0,35,0) 62%)' }} />
+      <span className="absolute inset-[2px] rounded-full bg-white dark:bg-zinc-900" />
+      <span className="relative w-[42%] h-[42%] rounded-full bg-primary animate-pulse" />
+    </span>
+  );
+}
 
 type LogType = 'info' | 'success' | 'warn' | 'error';
 type AppState = 'IDLE' | 'GENERATING_ATMOSPHERE' | 'GENERATING_PROMPT' | 'GENERATING_VIDEO' | 'VIDEO_READY';
@@ -35,6 +47,8 @@ const PAGE_TITLE: Record<AppPage, string> = {
 };
 
 export default function App() {
+  const { isAuthenticated, user, logout } = useAuth();
+  const [authPage, setAuthPage] = useState<'login' | 'signup'>('login');
   // Top-level page: the builder, the stock media library, or this session's renders.
   const [page, setPage] = useState<AppPage>('studio');
 
@@ -64,8 +78,24 @@ export default function App() {
 
   // Dark (default) or light studio theme — persisted, applied on <html>.
   const [theme, setTheme] = useState<Theme>(readTheme);
+  const [avatarOpen, setAvatarOpen] = useState(false);
+  const avatarRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => { applyTheme(theme); }, [theme]);
+
+  useEffect(() => {
+    if (!avatarOpen) return;
+    const onDown = (e: MouseEvent) => {
+      if (avatarRef.current && !avatarRef.current.contains(e.target as Node)) setAvatarOpen(false);
+    };
+    const onKey = (e: KeyboardEvent) => { if (e.key === 'Escape') setAvatarOpen(false); };
+    document.addEventListener('mousedown', onDown);
+    document.addEventListener('keydown', onKey);
+    return () => {
+      document.removeEventListener('mousedown', onDown);
+      document.removeEventListener('keydown', onKey);
+    };
+  }, [avatarOpen]);
 
   // Desktop-only: collapses the builder panel to a slim rail. Mobile keeps the
   // stacked layout and ignores this state entirely.
@@ -470,6 +500,13 @@ export default function App() {
     }
   };
 
+  if (!isAuthenticated) {
+    const toggleTheme = () => setTheme(t => (t === 'dark' ? 'light' : 'dark'));
+    return authPage === 'login'
+      ? <LoginPage onSwitch={() => setAuthPage('signup')} theme={theme} onToggleTheme={toggleTheme} />
+      : <SignupPage onSwitch={() => setAuthPage('login')} theme={theme} onToggleTheme={toggleTheme} />;
+  }
+
   return (
     <div className="md:h-screen w-full flex flex-col md:overflow-hidden bg-zinc-950 font-sans">
 
@@ -524,6 +561,7 @@ export default function App() {
           >
             {theme === 'dark' ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
           </button>
+
           {page === 'studio' && (
           <span className={`hidden md:inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-medium border ${
             canSubmit ? 'text-emerald-300 bg-emerald-500/10 border-emerald-500/30'
@@ -553,6 +591,92 @@ export default function App() {
             <SlidersHorizontal className="w-4 h-4" />
           </button>
           </>)}
+          {/* Avatar — modern circle + dropdown — last place after collapse */}
+          <div ref={avatarRef} className="relative">
+            <button
+              type="button"
+              onClick={() => setAvatarOpen((o) => !o)}
+              aria-haspopup="menu"
+              aria-expanded={avatarOpen}
+              aria-label="User menu"
+              className="flex items-center gap-1.5 rounded-full pl-1 pr-1.5 py-1 border border-zinc-700 bg-zinc-800 hover:border-zinc-600 hover:bg-zinc-700/80 transition-colors"
+            >
+              <span className="relative w-7 h-7 shrink-0 rounded-full bg-gradient-to-br from-primary to-primary-hover border border-white/10 flex items-center justify-center text-[11px] font-bold text-on-primary shadow-sm">
+                {(user?.name?.slice(0, 2).toUpperCase() || 'OS').slice(0, 2)}
+                <span className="absolute -bottom-0.5 -right-0.5 w-2.5 h-2.5 rounded-full bg-emerald-500 border-2 border-zinc-800" />
+              </span>
+              <span className="hidden sm:block text-xs font-medium text-zinc-200 leading-none">{user?.name?.split(' ')[0] || 'Omni'}</span>
+              <ChevronDown className={`hidden sm:block w-3 h-3 text-zinc-500 transition-transform duration-200 ${avatarOpen ? 'rotate-180' : ''}`} />
+            </button>
+            <AnimatePresence>
+              {avatarOpen && (
+                <motion.div
+                  initial={{ opacity: 0, y: 8, scale: 0.98 }}
+                  animate={{ opacity: 1, y: 0, scale: 1 }}
+                  exit={{ opacity: 0, y: 8, scale: 0.98 }}
+                  transition={{ duration: 0.18, ease: [0.22, 0.61, 0.36, 1] as any }}
+                  role="menu"
+                  className="absolute right-0 top-full mt-2 w-64 overflow-hidden rounded-2xl border border-zinc-800 bg-zinc-900 shadow-2xl shadow-black/60 z-50"
+                >
+                  <div className="p-4 border-b border-zinc-800 bg-gradient-to-br from-zinc-900 to-zinc-950">
+                    <div className="flex items-center gap-3">
+                      <span className="w-10 h-10 rounded-full bg-gradient-to-br from-primary to-primary-hover flex items-center justify-center text-sm font-bold text-on-primary shadow-md border border-white/10">
+                        {(user?.name?.slice(0, 2).toUpperCase() || 'OS').slice(0, 2)}
+                      </span>
+                      <div className="min-w-0">
+                        <p className="text-sm font-semibold text-white truncate">{user?.name || 'Omni Studio'}</p>
+                        <p className="text-xs text-zinc-400 truncate">{user?.email || 'studio@omni.ai'}</p>
+                      </div>
+                    </div>
+                    <div className="mt-3 flex items-center gap-1.5 text-[11px] text-zinc-400">
+                      <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" /> Pro Plan · Active
+                    </div>
+                  </div>
+                  <div className="p-2 space-y-1">
+                    <button
+                      role="menuitem"
+                      onClick={() => {
+                        setAvatarOpen(false);
+                      }}
+                      className="w-full flex items-center gap-3 rounded-xl px-3 py-2.5 text-xs font-medium text-zinc-300 hover:bg-zinc-800 hover:text-white transition-colors text-left"
+                    >
+                      <span className="w-7 h-7 rounded-lg bg-zinc-800 border border-zinc-700 grid place-items-center">
+                        <User className="w-3.5 h-3.5 text-zinc-400" />
+                      </span>
+                      <span className="flex-1">Profil</span>
+                      <ChevronRight className="w-3 h-3 text-zinc-600" />
+                    </button>
+                    <button
+                      role="menuitem"
+                      onClick={() => setAvatarOpen(false)}
+                      className="w-full flex items-center gap-3 rounded-xl px-3 py-2.5 text-xs font-medium text-zinc-300 hover:bg-zinc-800 hover:text-white transition-colors text-left"
+                    >
+                      <span className="w-7 h-7 rounded-lg bg-zinc-800 border border-zinc-700 grid place-items-center">
+                        <Settings className="w-3.5 h-3.5 text-zinc-400" />
+                      </span>
+                      <span className="flex-1">Paramètres</span>
+                      <ChevronRight className="w-3 h-3 text-zinc-600" />
+                    </button>
+                  </div>
+                  <div className="p-2 border-t border-zinc-800">
+                    <button
+                      role="menuitem"
+                      onClick={() => {
+                        setAvatarOpen(false);
+                        logout();
+                      }}
+                      className="w-full flex items-center gap-3 rounded-xl px-3 py-2.5 text-xs font-medium text-red-400 hover:bg-red-500/10 hover:text-red-300 border border-transparent hover:border-red-500/20 transition-colors text-left"
+                    >
+                      <span className="w-7 h-7 rounded-lg bg-red-500/10 border border-red-500/20 grid place-items-center">
+                        <LogOut className="w-3.5 h-3.5 text-red-400" />
+                      </span>
+                      <span className="flex-1">Déconnexion</span>
+                    </button>
+                  </div>
+                </motion.div>
+              )}
+            </AnimatePresence>
+          </div>
         </div>
       </header>
 
@@ -975,9 +1099,9 @@ export default function App() {
         )}
       </AnimatePresence>
 
-      {/* FOOTER — Clean, modern studio bar with minimal text */}
-      <footer id="studio-footer" className="shrink-0 border-t border-zinc-800 bg-zinc-900 px-6 md:px-8 py-3.5 flex flex-col sm:flex-row items-center justify-between gap-2.5 text-xs text-zinc-400">
-        <div className="flex items-center gap-3">
+      {/* FOOTER — 2026 copyright + socials */}
+      <footer id="studio-footer" className="shrink-0 border-t border-zinc-800 bg-zinc-900 px-6 md:px-8 py-3.5 flex flex-col lg:flex-row items-center justify-between gap-3 text-xs text-zinc-400">
+        <div className="flex flex-wrap items-center gap-3">
           <span className="flex items-center gap-2 font-medium text-zinc-200">
             <span className="relative flex w-1.5 h-1.5">
               <span className="absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-60 animate-ping" />
@@ -985,20 +1109,25 @@ export default function App() {
             </span>
             Omni Product Studio
           </span>
-          <span className="text-zinc-700">•</span>
+          <span className="hidden sm:inline text-zinc-700">•</span>
           <span className="text-zinc-400 text-[11px]">Gemini Omni 1.1 Flash</span>
+          <span className="hidden sm:inline text-zinc-700">•</span>
+          <span className="text-[11px] text-zinc-500">© 2026 Omni Product Studio — Artipik Studio. Tous droits réservés.</span>
         </div>
 
-        <div className="flex items-center gap-3 text-[11px] text-zinc-400">
-          <span>AI Commercial Generation</span>
-          <span className="text-zinc-700">•</span>
-          <a
-            href="https://policies.google.com/terms/generative-ai/use-policy"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="px-2 py-0.5 rounded-md text-zinc-300 hover:text-primary hover:bg-primary/10 border border-transparent hover:border-primary/40 transition-colors underline underline-offset-4 decoration-zinc-700"
-          >
-            Prohibited Use Policy
+        <div className="flex items-center gap-2">
+          <a href="https://artipikstudio.com" target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1.5 rounded-lg border border-zinc-800 bg-zinc-950 px-2.5 py-1.5 text-[11px] font-medium text-zinc-300 hover:border-primary/40 hover:text-primary hover:bg-primary/10 transition-colors">
+            <Globe className="w-3 h-3" /> artipikstudio.com <ExternalLink className="w-3 h-3 opacity-60" />
+          </a>
+          <span className="hidden sm:block h-4 w-px bg-zinc-800" />
+          <a href="https://facebook.com" target="_blank" rel="noopener noreferrer" aria-label="Facebook" className="w-8 h-8 grid place-items-center rounded-lg border border-zinc-800 bg-zinc-950 text-zinc-400 hover:text-white hover:border-[#1877F2]/40 hover:bg-[#1877F2]/10 transition-colors">
+            <Facebook className="w-3.5 h-3.5" />
+          </a>
+          <a href="https://wa.me/212000000000" target="_blank" rel="noopener noreferrer" aria-label="WhatsApp" className="w-8 h-8 grid place-items-center rounded-lg border border-zinc-800 bg-zinc-950 text-zinc-400 hover:text-white hover:border-[#25D366]/40 hover:bg-[#25D366]/10 transition-colors">
+            <MessageCircle className="w-3.5 h-3.5" />
+          </a>
+          <a href="https://policies.google.com/terms/generative-ai/use-policy" target="_blank" rel="noopener noreferrer" className="hidden md:inline-flex px-2 py-1 rounded-md text-[11px] text-zinc-400 hover:text-primary underline underline-offset-4 decoration-zinc-700 hover:decoration-primary transition-colors">
+            Policy
           </a>
         </div>
       </footer>
