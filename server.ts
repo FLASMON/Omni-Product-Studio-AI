@@ -20,7 +20,10 @@ function getAiClient() {
     // which kills longer renders (notably edits) — raise it well above max render time.
     aiClient = new GoogleGenAI({
       apiKey: process.env.GEMINI_API_KEY,
-      httpOptions: { timeout: 300000 }, // 5 minutes
+      httpOptions: {
+        timeout: 300000, // 5 minutes
+        headers: { 'User-Agent': 'aistudio-build' },
+      },
     });
   }
   return aiClient;
@@ -160,7 +163,29 @@ async function startServer() {
   const app = express();
   const PORT = 3000;
 
-  app.use(express.json({ limit: '50mb' }));
+  // ── Transition Studio job store (in-memory) ──────────────────────────────
+  const transitionJobs = new Map<string, { status: 'pending' | 'done' | 'error'; mimeType?: string; data?: Buffer; error?: string; createdAt: number }>();
+  setInterval(() => {
+    const cutoff = Date.now() - 30 * 60 * 1000;
+    for (const [id, job] of transitionJobs) if (job.createdAt < cutoff) transitionJobs.delete(id);
+  }, 5 * 60 * 1000);
+
+  // Increase payload limit to handle base64 video uploads (transition studio)
+  app.use(express.json({ limit: '500mb' }));
+  app.use(express.urlencoded({ limit: '500mb', extended: true }));
+
+  // Handle body parser errors
+  app.use((err: any, _req: express.Request, res: express.Response, next: express.NextFunction) => {
+    if (err.type === 'entity.too.large') {
+      return res.status(413).json({ error: 'Files too large. Please upload smaller videos.' });
+    }
+    next(err);
+  });
+
+  // ── Health ───────────────────────────────────────────────────────────────
+  app.get('/api/health', (_req, res) => {
+    res.json({ status: 'ok' });
+  });
 
   // Endpoint to generate prompt
   app.post('/api/generate-prompt', async (req, res) => {
@@ -373,9 +398,6 @@ Output ONLY the style brief text — no labels, no quotes, no preamble.`;
 
       console.log(`Interaction created: ${interaction.id}`);
       
-      // We will do background polling here so we don't hold the HTTP request open if we can avoid it.
-      // Or we can just hold it open since EAP allows background: true/false. Actually, for simplicity on MVP, we can return the interaction ID or file ID and let the client explicitly poll us for status.
-      
       if (!interaction.output_video || !interaction.output_video.uri) {
         throw new Error('No video URI returned from interaction.');
       }
@@ -507,6 +529,175 @@ Output ONLY the style brief text — no labels, no quotes, no preamble.`;
       console.error('Error streaming video:', e);
       res.status(500).send(e.message);
     }
+  });
+
+  // ── Transition Studio: Omni Transition + Extend + Upscale (job-based) ───────
+  // Kept in the same server so the integrated frontend reuses the single origin.
+
+  app.post('/api/upscale', async (req, res) => {
+    try {
+      const { video, mimeType, target } = req.body;
+      if (!video) return res.status(400).json({ error: 'Video is required' });
+      const ai = getAiClient();
+
+      const inputParts: any[] = [];
+      inputParts.push({ type: 'video', data: video, mime_type: mimeType || 'video/mp4' });
+      inputParts.push({ type: 'text', text: `Task: Upscale this video to ${target === '4k' ? '4K (ultra high)' : '1080p (high)'} resolution. Maintain exact content.` });
+
+      const jobId = Date.now().toString(36) + Math.random().toString(36).slice(2, 8);
+      transitionJobs.set(jobId, { status: 'pending', createdAt: Date.now() });
+      res.json({ jobId });
+
+      (async () => {
+        try {
+          const interaction = await ai.interactions.create(
+            {
+              model: 'gemini-omni-1.1-flash',
+              input: [{ type: 'user_input', content: inputParts }],
+              system_instruction: "You are an AI video upscaler. Do not change the visual content, motion, or meaning. Simply increase the resolution and clarify details.",
+              background: false,
+              store: false,
+              stream: false,
+              response_format: { type: 'video' },
+            } as any,
+            { timeout: 600000 } as any
+          );
+
+          const videoPart: any = (interaction as any).output_video;
+          if (videoPart && videoPart.data) {
+            transitionJobs.set(jobId, { status: 'done', mimeType: videoPart.mime_type || 'video/mp4', data: Buffer.from(videoPart.data, 'base64'), createdAt: Date.now() });
+          } else {
+            let text = (interaction as any).output_text;
+            if (!text) {
+              for (const step of (interaction as any).steps ?? []) {
+                if (step.type === 'model_output') {
+                  const t = step.content?.find((c: any) => c.type === 'text');
+                  if (t?.text) text = (text || '') + t.text;
+                }
+              }
+            }
+            transitionJobs.set(jobId, { status: 'error', error: text || 'No video output received.', createdAt: Date.now() });
+          }
+        } catch (err: any) {
+          transitionJobs.set(jobId, { status: 'error', error: extractErrorMessage(err) || 'Generation failed.', createdAt: Date.now() });
+        }
+      })();
+    } catch (error: any) {
+      console.error('Error generating Upscale:', error);
+      if (!res.headersSent) res.status(500).json({ error: extractErrorMessage(error) || 'An error occurred' });
+    }
+  });
+
+  app.post('/api/omni', async (req, res) => {
+    try {
+      const { prompt, format, media, references, mode, video, mimeType, sourceMedia } = req.body;
+      const ai = getAiClient();
+      const inputParts: any[] = [];
+
+      // Scene Extension mode
+      if (mode === 'extend') {
+        if (sourceMedia && Array.isArray(sourceMedia)) {
+          sourceMedia.forEach((m: any) => {
+            if (m.data && m.mimeType) {
+              if (m.mimeType.startsWith('image/')) {
+                inputParts.push({ type: 'image', data: m.data, mime_type: m.mimeType });
+              } else if (m.mimeType.startsWith('video/')) {
+                inputParts.push({ type: 'video', data: m.data, mime_type: m.mimeType });
+              }
+            }
+          });
+        }
+        inputParts.push({ type: 'text', text: 'Original source context above. Latest generated segment below:' });
+        inputParts.push({ type: 'video', data: video, mime_type: mimeType || 'video/mp4' });
+        inputParts.push({ type: 'text', text: `Extend this scene by 10 seconds, continuing the exact same shot, motion, lighting, subjects, and ambient audio. Use ALL provided footage — the original source media and the latest segment — as full context so layout, objects, and light remain consistent. ${prompt || ''}` });
+      } else {
+        if (media && Array.isArray(media)) {
+          media.forEach((m: any, index: number) => {
+            if (m.data && m.mimeType) {
+              if (index === 0) inputParts.push({ type: 'text', text: 'First frame:' });
+              else if (index === 1) inputParts.push({ type: 'text', text: 'Last frame:' });
+              if (m.mimeType.startsWith('image/')) {
+                inputParts.push({ type: 'image', data: m.data, mime_type: m.mimeType });
+              } else if (m.mimeType.startsWith('video/')) {
+                inputParts.push({ type: 'video', data: m.data, mime_type: m.mimeType });
+              }
+            }
+          });
+        }
+        if (references && Array.isArray(references)) {
+          references.forEach((r: any) => {
+            if (r.data && r.mimeType) {
+              inputParts.push({ type: 'text', text: 'Style reference (do not copy content, match look/character/environment):' });
+              inputParts.push({ type: 'video', data: r.data, mime_type: r.mimeType });
+            }
+          });
+        }
+        if (prompt) inputParts.push({ type: 'text', text: prompt });
+      }
+
+      if (inputParts.length === 0) {
+        return res.status(400).json({ error: 'Prompt or media is required' });
+      }
+
+      const responseFormat: any = format ? { type: format } : { type: 'video' };
+      if (mode === 'extend' && responseFormat.type === 'video') {
+        responseFormat.duration = '10s';
+      }
+
+      const jobId = Date.now().toString(36) + Math.random().toString(36).slice(2, 8);
+      transitionJobs.set(jobId, { status: 'pending', createdAt: Date.now() });
+      res.json({ jobId });
+
+      (async () => {
+        try {
+          const interaction: any = await ai.interactions.create(
+            {
+              model: 'gemini-omni-1.1-flash',
+              input: [{ type: 'user_input', content: inputParts }],
+              system_instruction: "You are a world-class visual effects AI specializing in seamless frame interpolation, scene extension, and continuous camera movements. You generate high-quality video that starts exactly on the First frame and ends exactly on the Last frame in a single, continuous, uncut shot. NEVER use hard cuts. NEVER hallucinate new characters. Maintain strict temporal consistency. You execute named transition techniques — object portals, whip pans, match morphs, sky drops, foreground wipes, and time-lapse transformations — boldly and completely. The technique specified in the prompt is the creative priority.",
+              background: false,
+              store: false,
+              stream: false,
+              response_format: responseFormat,
+            } as any,
+            { timeout: 600000 } as any
+          );
+          const videoPart = interaction.output_video;
+          if (videoPart && videoPart.data) {
+            transitionJobs.set(jobId, { status: 'done', mimeType: videoPart.mime_type || 'video/mp4', data: Buffer.from(videoPart.data, 'base64'), createdAt: Date.now() });
+          } else {
+            let text = interaction.output_text;
+            if (!text) {
+              for (const step of interaction.steps ?? []) {
+                if (step.type === 'model_output') {
+                  const t = step.content?.find((c: any) => c.type === 'text');
+                  if (t?.text) text = (text || '') + t.text;
+                }
+              }
+            }
+            transitionJobs.set(jobId, { status: 'error', error: text || 'No video output received.', createdAt: Date.now() });
+          }
+        } catch (err: any) {
+          transitionJobs.set(jobId, { status: 'error', error: extractErrorMessage(err) || 'Generation failed.', createdAt: Date.now() });
+        }
+      })();
+    } catch (error: any) {
+      console.error('Error generating Omni output:', error);
+      if (!res.headersSent) res.status(500).json({ error: extractErrorMessage(error) || 'An error occurred' });
+    }
+  });
+
+  app.get('/api/job/:id', (req, res) => {
+    const job = transitionJobs.get(req.params.id);
+    if (!job) return res.status(404).json({ error: 'Unknown job' });
+    res.json({ status: job.status, error: job.error });
+  });
+
+  app.get('/api/job/:id/result', (req, res) => {
+    const job = transitionJobs.get(req.params.id);
+    if (!job || job.status !== 'done' || !job.data) return res.status(404).json({ error: 'Result not ready' });
+    res.setHeader('Content-Type', job.mimeType || 'video/mp4');
+    res.send(job.data);
   });
 
   // User provided endpoints for gemini-3.1-flash-lite-image and gemini-3.1-flash-lite

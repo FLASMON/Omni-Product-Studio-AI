@@ -429,8 +429,8 @@ export function MediaLibrary({
                       onClick={action.onClick}
                       className={
                         action.primary
-                          ? 'inline-flex items-center gap-2 rounded-xl border border-primary bg-primary px-4 py-2 text-xs font-semibold text-on-primary transition-colors hover:bg-primary-hover active:scale-[0.98]'
-                          : 'inline-flex items-center gap-2 rounded-xl border border-zinc-700 bg-zinc-900 px-4 py-2 text-xs font-medium text-zinc-200 transition-colors hover:border-primary/50 hover:bg-primary/10 hover:text-primary active:scale-[0.98]'
+                          ? 'inline-flex items-center gap-2 rounded-xl border border-primary bg-primary px-4 py-2.5 text-xs font-semibold uppercase tracking-wider text-on-primary shadow-lg shadow-primary/20 hover:bg-primary-hover hover:shadow-xl hover:shadow-primary/30 active:scale-[0.98] transition-all'
+                          : 'inline-flex items-center gap-2 rounded-xl border border-zinc-800 bg-zinc-900 px-4 py-2.5 text-xs font-medium text-zinc-300 hover:border-primary/40 hover:bg-primary/10 hover:text-primary hover:shadow-md active:scale-[0.98] transition-all'
                       }
                     >
                       {action.icon}
@@ -440,7 +440,7 @@ export function MediaLibrary({
                   {openItem.downloadUrl && (
                     <a
                       href={openItem.downloadUrl}
-                      className="inline-flex items-center gap-2 rounded-xl border border-primary bg-primary px-4 py-2 text-xs font-semibold text-on-primary transition-colors hover:bg-primary-hover active:scale-[0.98]"
+                      className="inline-flex items-center gap-2 rounded-xl border border-primary bg-primary px-4 py-2.5 text-xs font-semibold uppercase tracking-wider text-on-primary shadow-lg shadow-primary/20 hover:bg-primary-hover hover:shadow-xl hover:shadow-primary/30 active:scale-[0.98] transition-all"
                     >
                       <Download className="h-3.5 w-3.5" />
                       Download

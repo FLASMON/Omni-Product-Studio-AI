@@ -3,13 +3,14 @@ import {
   CircleHelp,
   Film,
   History,
+  Layers,
   PanelLeftClose,
   PanelLeftOpen,
   Wand2,
   type LucideIcon,
 } from 'lucide-react';
 
-export type AppPage = 'studio' | 'media' | 'renders';
+export type AppPage = 'studio' | 'media' | 'renders' | 'transitions';
 
 interface NavEntry {
   id: AppPage;
@@ -20,6 +21,7 @@ interface NavEntry {
 
 const NAV: NavEntry[] = [
   { id: 'studio', label: 'Studio', hint: 'Build & render', icon: Wand2 },
+  { id: 'transitions', label: 'Transitions', hint: 'Seamless cuts', icon: Layers },
   { id: 'media', label: 'Media', hint: 'Stock library', icon: Film },
   { id: 'renders', label: 'Renders', hint: 'This session', icon: History },
 ];

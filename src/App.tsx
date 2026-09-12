@@ -14,6 +14,7 @@ import { MediaLibrary, LibraryItem, LibraryAction } from './components/MediaLibr
 import { STOCK_VIDEOS, STOCK_CATEGORY_LABEL, FILTER_PREVIEW_STILL } from './stockVideos.js';
 import { toInlineImages, InlineImage } from './images.js';
 import { NoticeBanner, NoticeCard } from './components/NoticeBanner.js';
+import { TransitionStudio } from './components/TransitionStudio.js';
 
 type LogType = 'info' | 'success' | 'warn' | 'error';
 type AppState = 'IDLE' | 'GENERATING_ATMOSPHERE' | 'GENERATING_PROMPT' | 'GENERATING_VIDEO' | 'VIDEO_READY';
@@ -28,6 +29,7 @@ interface VideoVersion {
 // Label shown next to the brand in the header for the active page.
 const PAGE_TITLE: Record<AppPage, string> = {
   studio: 'Studio',
+  transitions: 'Transitions',
   media: 'Media Library',
   renders: 'Renders',
 };
@@ -800,6 +802,8 @@ export default function App() {
         </aside>
 
         </>
+        ) : page === 'transitions' ? (
+          <TransitionStudio />
         ) : page === 'media' ? (
           <MediaLibrary
             key="library-media"
