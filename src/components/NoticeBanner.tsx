@@ -29,7 +29,7 @@ export function NoticeBanner({ onDismiss, className = '' }: NoticeBannerProps) {
             <span className="shrink-0 inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider bg-amber-500/20 text-amber-600 dark:text-amber-300 border border-amber-500/30">
               Notice
             </span>
-            <span className="text-zinc-700 dark:text-zinc-300 leading-relaxed font-normal">
+            <span className="text-gray-800 dark:text-zinc-300 leading-relaxed font-normal">
               {OMNI_QUOTA_NOTICE_TEXT}
             </span>
           </div>
@@ -81,7 +81,7 @@ export function NoticeCard({ className = '', compact = false }: NoticeCardProps)
               </span>
             )}
           </div>
-          <p className="text-[11px] leading-relaxed text-zinc-700 dark:text-zinc-300 font-normal">
+          <p className="text-[11px] leading-relaxed text-gray-800 dark:text-zinc-300 font-normal">
             {OMNI_QUOTA_NOTICE_TEXT}
           </p>
         </div>

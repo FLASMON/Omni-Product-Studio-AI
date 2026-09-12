@@ -240,7 +240,7 @@ export function MediaLibrary({
                   key={cat}
                   type="button"
                   onClick={() => setCategory(cat)}
-                  className={`shrink-0 rounded-full border px-3.5 py-1.5 text-[11px] font-medium transition-all duration-150 ${
+                  className={`shrink-0 rounded-lg border px-4 py-1.5 min-w-[92px] justify-center inline-flex items-center text-[11px] font-medium transition-all duration-150 ${
                     active
                       ? 'border-primary bg-primary text-on-primary shadow-md shadow-primary/25'
                       : 'border-zinc-800 bg-zinc-900/70 text-zinc-400 hover:border-primary/50 hover:text-primary'
@@ -252,7 +252,7 @@ export function MediaLibrary({
             })}
           </div>
 
-          <div className="relative shrink-0 lg:w-72">
+          <div className="relative shrink-0 w-full lg:w-80 xl:w-[22rem]">
             <Search className="pointer-events-none absolute left-3 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-zinc-500" />
             <input
               value={query}
@@ -309,13 +309,20 @@ export function MediaLibrary({
             ))}
           </div>
         ) : (
-          <div className="fade-up relative flex min-h-[360px] flex-col items-center justify-center px-6 py-16 text-center">
+          <div className="fade-up relative flex min-h-[480px] flex-1 flex-col items-center justify-center px-6 py-16 text-center">
             <span className="pointer-events-none absolute inset-0 -z-10 bg-[radial-gradient(ellipse_at_center,var(--empty-halo),transparent_68%)]" />
-            <span className="mb-5 grid h-16 w-16 place-items-center rounded-full border border-white/10 bg-white/[0.03]">
-              <Film className="h-7 w-7 text-zinc-500" />
-            </span>
-            <h3 className="text-base font-semibold text-zinc-100">{emptyTitle}</h3>
-            <p className="mt-2 max-w-sm text-xs leading-relaxed text-zinc-500">{emptyBody}</p>
+            <div className="relative mb-7">
+              <span className="absolute -inset-4 rounded-3xl blur-2xl bg-primary/[0.06] pointer-events-none" />
+              <span className="relative grid h-20 w-20 place-items-center rounded-2xl border border-white/10 bg-white/[0.04] shadow-inner pulse-glow">
+                <Film className="h-8 w-8 text-zinc-500" />
+                <span className="absolute -top-1.5 -right-1.5 flex h-3 w-3">
+                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-primary opacity-60"></span>
+                  <span className="relative inline-flex rounded-full h-3 w-3 bg-primary shadow-sm"></span>
+                </span>
+              </span>
+            </div>
+            <h3 className="text-lg md:text-xl font-semibold tracking-tight text-white">{emptyTitle}</h3>
+            <p className="mt-3 max-w-md text-sm leading-relaxed text-zinc-400">{emptyBody}</p>
             {(query || category !== 'All') && (
               <button
                 type="button"
@@ -323,7 +330,7 @@ export function MediaLibrary({
                   setQuery('');
                   setCategory('All');
                 }}
-                className="mt-5 rounded-xl border border-zinc-700 bg-zinc-900 px-4 py-2 text-xs font-medium text-zinc-200 transition-colors hover:border-primary/50 hover:bg-primary/10 hover:text-primary"
+                className="mt-6 rounded-lg border border-zinc-700 bg-zinc-900 px-5 py-2.5 text-xs font-semibold text-zinc-200 transition-all hover:border-primary/50 hover:bg-primary/10 hover:text-primary hover:shadow-md active:scale-[0.98]"
               >
                 Clear filters
               </button>

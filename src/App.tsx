@@ -14,7 +14,7 @@ import { MediaLibrary, LibraryItem, LibraryAction } from './components/MediaLibr
 import { STOCK_VIDEOS, STOCK_CATEGORY_LABEL, FILTER_PREVIEW_STILL } from './stockVideos.js';
 import { toInlineImages, InlineImage } from './images.js';
 import { NoticeBanner, NoticeCard } from './components/NoticeBanner.js';
-import { TransitionStudio } from './components/TransitionStudio.js';
+import { TransitionStudio, HistoryItem as TransitionHistoryItem } from './components/TransitionStudio.js';
 
 type LogType = 'info' | 'success' | 'warn' | 'error';
 type AppState = 'IDLE' | 'GENERATING_ATMOSPHERE' | 'GENERATING_PROMPT' | 'GENERATING_VIDEO' | 'VIDEO_READY';
@@ -53,6 +53,10 @@ export default function App() {
   const [selectedLabel, setSelectedLabel] = useState<string | null>(null);
   const versionCount = useRef(0);
 
+  // Transition Studio archive — lifted so it can live in Media Library (Renders) like MediaLibrary
+  const [transitionHistory, setTransitionHistory] = useState<TransitionHistoryItem[]>([]);
+  const [transitionActiveId, setTransitionActiveId] = useState<string | null>(null);
+
   const [editOpen, setEditOpen] = useState(false);
   const [editText, setEditText] = useState('');
   const [promptOpen, setPromptOpen] = useState(false);
@@ -66,6 +70,7 @@ export default function App() {
   // Desktop-only: collapses the builder panel to a slim rail. Mobile keeps the
   // stacked layout and ignores this state entirely.
   const [sidebarOpen, setSidebarOpen] = useState(true);
+  const [transitionSidebarOpen, setTransitionSidebarOpen] = useState(true);
   // Right post-production panel (desktop): open by default, collapsible.
   const [postOpen, setPostOpen] = useState(true);
 
@@ -190,7 +195,57 @@ export default function App() {
     [versions, gradeFilter],
   );
 
+  // Transition takes — same MediaLibrary place as Renders, category "Transitions"
+  const transitionLibraryItems: LibraryItem[] = useMemo(
+    () =>
+      transitionHistory.map((h, idx) => ({
+        id: `trans-${h.id}`,
+        title: `Transition Take ${String(transitionHistory.length - idx).padStart(2, '0')}`,
+        subtitle: h.prompt.replace(/\s+/g, ' ').trim().slice(0, 140) + (h.prompt.length > 140 ? '…' : ''),
+        category: 'Transitions',
+        keywords: ['transition', 'omni', 'take', h.prompt, `seg-${h.segments.length}`],
+        src: h.segments[0]?.url ?? '',
+        poster: undefined,
+        badge: h.segments.length > 1 ? `${h.segments.length} seg` : 'Take',
+        preload: 'metadata' as const,
+      })),
+    [transitionHistory],
+  );
+
+  const allRenderItems: LibraryItem[] = useMemo(() => [...renderItems, ...transitionLibraryItems], [renderItems, transitionLibraryItems]);
+
   const renderActions = (item: LibraryItem): LibraryAction[] => {
+    // Transitions are prefixed trans-
+    if (item.id.startsWith('trans-')) {
+      const hid = item.id.replace(/^trans-/, '');
+      const h = transitionHistory.find((x) => x.id === hid);
+      if (!h) return [];
+      const seg = h.segments[0];
+      return [
+        {
+          label: 'Open in Transitions',
+          icon: <Wand2 className="w-3.5 h-3.5" />,
+          primary: true,
+          onClick: () => {
+            setTransitionActiveId(h.id);
+            setPage('transitions');
+          },
+        },
+        {
+          label: 'Download',
+          icon: <Download className="w-3.5 h-3.5" />,
+          onClick: () => {
+            if (!seg) return;
+            const a = document.createElement('a');
+            a.href = seg.url;
+            a.download = `transition-take-${h.id.slice(-6)}.mp4`;
+            document.body.appendChild(a);
+            a.click();
+            a.remove();
+          },
+        },
+      ];
+    }
     const version = versions.find(v => v.label === item.badge);
     if (!version) return [];
     return [
@@ -513,8 +568,14 @@ export default function App() {
         <AppSidebar
           page={page}
           onNavigate={handleNavigate}
-          renderCount={versions.length}
-          builder={page === 'studio' ? { open: sidebarOpen, onToggle: () => setSidebarOpen(o => !o) } : undefined}
+          renderCount={allRenderItems.length}
+          builder={
+            page === 'studio'
+              ? { open: sidebarOpen, onToggle: () => setSidebarOpen(o => !o) }
+              : page === 'transitions'
+                ? { open: transitionSidebarOpen, onToggle: () => setTransitionSidebarOpen(o => !o) }
+                : undefined
+          }
         />
 
         {page === 'studio' ? (
@@ -803,7 +864,15 @@ export default function App() {
 
         </>
         ) : page === 'transitions' ? (
-          <TransitionStudio />
+          <TransitionStudio
+            history={transitionHistory}
+            setHistory={setTransitionHistory}
+            activeHistoryId={transitionActiveId}
+            setActiveHistoryId={setTransitionActiveId}
+            onViewAllInLibrary={() => setPage('renders')}
+            sidebarOpen={transitionSidebarOpen}
+            onToggleSidebar={() => setTransitionSidebarOpen(o => !o)}
+          />
         ) : page === 'media' ? (
           <MediaLibrary
             key="library-media"
@@ -816,7 +885,7 @@ export default function App() {
               title="Media Library"
               subtitle="License-free stock footage — hover a card to play it, click to enlarge."
             >
-              <span className="rounded-full border border-zinc-800 bg-zinc-900/70 px-3 py-1.5 text-[10px] font-medium uppercase tracking-wider text-zinc-400">
+              <span className="rounded-lg border border-zinc-800 bg-zinc-900/70 px-3 py-1.5 text-[10px] font-medium uppercase tracking-wider text-zinc-400">
                 {STOCK_VIDEOS.length} clips · Mixkit Free License
               </span>
             </PageHeading>
@@ -824,25 +893,35 @@ export default function App() {
         ) : (
           <MediaLibrary
             key="library-renders"
-            items={renderItems}
+            items={allRenderItems}
             emptyTitle="No renders yet"
-            emptyBody="Pick a product and an atmosphere in the Studio, then generate your first cinematic shot — every version lands here."
+            emptyBody="Pick a product and atmosphere in Studio or bridge two frames in Transitions — every Studio version and every Transition take lands here in one Media Library place. Use categories to filter."
             getActions={renderActions}
             noun="render"
           >
             <PageHeading
               icon={History}
               title="Renders"
-              subtitle="Every version generated this session, shown with the live post-production grade."
+              subtitle="Media Library place for Reel Archive — every Studio version and Transition take, with live grade preview. Filter by My renders / Transitions."
             >
-              <button
-                type="button"
-                onClick={() => setPage('studio')}
-                className="inline-flex items-center gap-2 rounded-xl border border-primary bg-primary px-4 py-2 text-xs font-semibold text-on-primary transition-colors hover:bg-primary-hover active:scale-[0.98]"
-              >
-                <Wand2 className="w-3.5 h-3.5" />
-                Open Studio
-              </button>
+              <div className="flex items-center gap-2">
+                <button
+                  type="button"
+                  onClick={() => setPage('studio')}
+                  className="inline-flex items-center gap-2 rounded-lg border border-primary bg-primary px-4 py-2 text-xs font-semibold text-on-primary shadow-lg shadow-primary/20 hover:bg-primary-hover hover:shadow-xl active:scale-[0.98] transition-all"
+                >
+                  <Wand2 className="w-3.5 h-3.5" />
+                  Open Studio
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setPage('transitions')}
+                  className="inline-flex items-center gap-2 rounded-lg border border-zinc-800 bg-zinc-900 px-4 py-2 text-xs font-semibold text-zinc-300 hover:border-primary/40 hover:bg-primary/10 hover:text-primary active:scale-[0.98] transition-all"
+                >
+                  <Film className="w-3.5 h-3.5" />
+                  Open Transitions
+                </button>
+              </div>
             </PageHeading>
           </MediaLibrary>
         )}

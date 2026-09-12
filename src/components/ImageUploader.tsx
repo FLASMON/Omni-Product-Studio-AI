@@ -248,7 +248,7 @@ export function ImageUploader({
             id={`generate-${type}-btn`}
             onClick={handleGenerate}
             disabled={disabled || generating || !promptText.trim()}
-            className="w-full flex items-center justify-center gap-2.5 py-3.5 px-6 bg-primary hover:bg-primary-hover text-on-primary text-xs font-semibold uppercase tracking-wider rounded-xl transition-all duration-150 shadow-lg shadow-primary/25 hover:shadow-xl hover:shadow-primary/30 active:scale-[0.98] border border-primary disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:bg-primary disabled:shadow-none"
+            className="w-full flex items-center justify-center gap-2.5 py-3.5 px-6 bg-primary hover:bg-primary-hover text-on-primary text-xs font-semibold uppercase tracking-wider rounded-lg transition-all duration-150 shadow-lg shadow-primary/25 hover:shadow-xl hover:shadow-primary/30 active:scale-[0.98] border border-primary disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:bg-primary disabled:shadow-none"
           >
             {generating ? (
               <>

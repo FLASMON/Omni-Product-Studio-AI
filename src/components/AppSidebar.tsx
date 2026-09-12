@@ -195,7 +195,7 @@ export function PageHeading({
   return (
     <div className="mb-6 flex flex-wrap items-end justify-between gap-4">
       <div className="flex items-center gap-3">
-        <span className="grid h-11 w-11 shrink-0 place-items-center rounded-2xl border border-primary/30 bg-primary/10 shadow-lg shadow-black/10">
+        <span className="grid h-11 w-11 shrink-0 place-items-center rounded-lg border border-primary/30 bg-primary/10 shadow-lg shadow-black/10">
           <Icon className="h-5 w-5 text-primary" />
         </span>
         <div>

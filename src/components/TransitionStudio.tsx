@@ -1,43 +1,51 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import {
   Upload,
   Film,
-  Play,
-  X,
-  Clock,
   ArrowRight,
   Download,
   Layers,
-  ChevronLeft,
-  ChevronRight,
   RotateCcw,
   Sparkles,
   AlertTriangle,
   Wand2,
   CheckCircle2,
   Image as ImageIcon,
+  X,
+  History,
+  Clock,
 } from 'lucide-react';
 
 /* ── Types ──────────────────────────────────────────────────────────────── */
 
-interface MediaState {
+export interface MediaState {
   url: string;
   data: string;
   mimeType: string;
 }
 
-interface Segment {
+export interface Segment {
   url: string;
   data: string;
   mimeType: string;
   kind: 'transition' | 'extension';
 }
 
-interface HistoryItem {
+export interface HistoryItem {
   id: string;
   segments: Segment[];
   prompt: string;
   timestamp: Date;
+}
+
+interface TransitionStudioProps {
+  history?: HistoryItem[];
+  setHistory?: React.Dispatch<React.SetStateAction<HistoryItem[]>>;
+  activeHistoryId?: string | null;
+  setActiveHistoryId?: React.Dispatch<React.SetStateAction<string | null>>;
+  onViewAllInLibrary?: () => void;
+  sidebarOpen?: boolean;
+  onToggleSidebar?: () => void;
 }
 
 /* ── Transition techniques (ported from omni-transition-studio) ────────── */
@@ -131,7 +139,7 @@ The CAMERA does not travel through space; TIME travels around the camera. Avoid 
 
 /* ── Component ────────────────────────────────────────────────────────── */
 
-export function TransitionStudio() {
+export function TransitionStudio(props: TransitionStudioProps = {}) {
   const [prompt, setPrompt] = useState('');
   const [technique, setTechnique] = useState<string | null>(null);
   const [extendPrompt, setExtendPrompt] = useState('');
@@ -143,11 +151,26 @@ export function TransitionStudio() {
   const [error, setError] = useState<string | null>(null);
   const [segments, setSegments] = useState<Segment[]>([]);
   const [selectedSegmentIndex, setSelectedSegmentIndex] = useState<number>(0);
-  const [history, setHistory] = useState<HistoryItem[]>([]);
-  const [activeHistoryId, setActiveHistoryId] = useState<string | null>(null);
-  const [isArchiveOpen, setIsArchiveOpen] = useState(false);
+  const [internalHistory, setInternalHistory] = useState<HistoryItem[]>([]);
+  const [internalActiveId, setInternalActiveId] = useState<string | null>(null);
   const [dragOver1, setDragOver1] = useState(false);
   const [dragOver2, setDragOver2] = useState(false);
+
+  const history = props.history ?? internalHistory;
+  const setHistory = props.setHistory ?? setInternalHistory;
+  const activeHistoryId = props.activeHistoryId ?? internalActiveId;
+  const setActiveHistoryId = props.setActiveHistoryId ?? setInternalActiveId;
+  const sidebarOpen = props.sidebarOpen ?? true;
+
+  useEffect(() => {
+    if (!activeHistoryId) return;
+    const item = history.find((h) => h.id === activeHistoryId);
+    if (item && item.segments !== segments) {
+      setSegments(item.segments);
+      setSelectedSegmentIndex(0);
+      if (item.prompt && !prompt) setPrompt(item.prompt);
+    }
+  }, [activeHistoryId, history]);
 
   const fileInput1Ref = useRef<HTMLInputElement>(null);
   const fileInput2Ref = useRef<HTMLInputElement>(null);
@@ -357,151 +380,40 @@ CRITICAL RULES:
   const canGenerate = !isGenerating && !!image1 && !!image2 && (!!prompt.trim() || !!technique);
 
   return (
-    <div className="flex flex-col lg:flex-row flex-1 min-h-0 w-full bg-zinc-950 text-white overflow-hidden font-sans lg:overflow-hidden overflow-y-auto lg:overflow-y-hidden thin-scrollbar">
-      {/* ── REEL ARCHIVE (collapsible) ─────────────────────────────────── */}
+    <div className="flex flex-col md:flex-row flex-1 min-h-0 w-full bg-zinc-950 text-white overflow-hidden font-sans">
+      {/* ── LEFT: Source Media — exact Studio Build sidebar, collapsible ────── */}
       <aside
-        className={`hidden lg:flex bg-zinc-950 border-r border-zinc-800 flex-col z-10 transition-all duration-300 ease-in-out shrink-0 ${isArchiveOpen ? 'w-72 xl:w-80' : 'w-[52px]'}`}
+        id="transition-left-sidebar"
+        className={`relative w-full md:shrink-0 border-b md:border-b-0 md:border-r border-zinc-800 bg-zinc-900 flex flex-col justify-between transition-[width] duration-300 ease-in-out overflow-hidden ${
+          sidebarOpen ? 'md:w-[440px] p-6 md:p-7 md:overflow-y-auto md:overflow-x-hidden thin-scrollbar' : 'md:w-[56px] p-6 md:py-8 md:px-0 md:overflow-hidden'
+        }`}
       >
-        {/* Header / Toggle */}
-        <div className="h-[56px] border-b border-zinc-800 flex items-center justify-between px-2.5 bg-zinc-950 shrink-0">
-          {isArchiveOpen ? (
-            <>
-              <div className="flex items-center gap-2 pl-1 overflow-hidden">
-                <Clock size={14} className="text-zinc-400 shrink-0" />
-                <h2 className="text-[11px] uppercase tracking-widest text-zinc-100 font-semibold truncate">Reel Archive</h2>
-                <span className="text-[10px] text-zinc-400 font-mono font-medium px-1.5 py-0.5 rounded bg-zinc-900 border border-zinc-800 shrink-0">
-                  {history.length}
-                </span>
-              </div>
-              <button
-                onClick={() => setIsArchiveOpen(false)}
-                className="w-7 h-7 rounded-lg flex items-center justify-center text-zinc-500 hover:text-white hover:bg-zinc-900 border border-transparent hover:border-zinc-800 transition-colors"
-                title="Collapse Reel Archive"
-                aria-label="Collapse Reel Archive"
-              >
-                <ChevronLeft size={14} strokeWidth={2} />
-              </button>
-            </>
-          ) : (
-            <button
-              onClick={() => setIsArchiveOpen(true)}
-              className="w-8 h-8 rounded-lg mx-auto flex items-center justify-center text-zinc-500 hover:text-primary hover:bg-primary/10 border border-transparent hover:border-primary/30 transition-colors"
-              title="Expand Reel Archive"
-              aria-label="Expand Reel Archive"
-            >
-              <ChevronRight size={14} strokeWidth={2} />
-            </button>
-          )}
-        </div>
-
-        {!isArchiveOpen ? (
-          <div className="flex-1 flex flex-col items-center py-6 gap-6">
-            <button
-              onClick={() => setIsArchiveOpen(true)}
-              className="flex flex-col items-center group text-zinc-500 hover:text-white"
-              title={`Expand Reel Archive (${history.length} ${history.length === 1 ? 'take' : 'takes'})`}
-            >
-              <div className="w-8 h-8 rounded-xl bg-zinc-900 border border-zinc-800 flex items-center justify-center group-hover:border-primary/50 group-hover:bg-primary/10 transition-colors">
-                <Clock size={14} strokeWidth={2} className="text-zinc-500 group-hover:text-primary" />
-              </div>
-              {history.length > 0 && (
-                <span className="mt-2 text-[10px] font-mono text-primary font-bold bg-primary/10 px-1.5 py-0.5 rounded-full border border-primary/25">
-                  {history.length}
-                </span>
-              )}
-            </button>
-            <div
-              onClick={() => setIsArchiveOpen(true)}
-              className="[writing-mode:vertical-rl] text-[10px] uppercase tracking-[0.2em] text-zinc-600 font-semibold cursor-pointer hover:text-zinc-400 transition-colors pt-2 select-none"
-            >
-              Reel Archive
+        {/* Collapsed rail — vertical branding only, expand via AppSidebar */}
+        {!sidebarOpen && (
+          <div className="hidden md:flex flex-col items-center gap-4 h-full pt-1">
+            <div className="flex-1 flex flex-col items-center gap-5 text-zinc-500">
+              <span className="text-[11px] font-medium uppercase tracking-[0.25em] [writing-mode:vertical-rl] rotate-180 whitespace-nowrap select-none">Omni Transitions</span>
+              <Layers className="w-4 h-4 text-zinc-600" />
             </div>
-          </div>
-        ) : (
-          <div className="flex-1 overflow-y-auto p-3 space-y-3 thin-scrollbar">
-            {history.length === 0 ? (
-              <div className="text-center text-zinc-500 text-xs mt-16 px-4 leading-relaxed">
-                <div className="mx-auto w-10 h-10 rounded-xl bg-zinc-900 border border-zinc-800 grid place-items-center mb-3">
-                  <Film size={16} className="text-zinc-600" />
-                </div>
-                Rendered takes will be preserved here.
-              </div>
-            ) : (
-              history.map((item) => {
-                const isSelected = activeHistoryId === item.id;
-                return (
-                  <div
-                    key={item.id}
-                    onClick={() => {
-                      setSegments(item.segments);
-                      setPrompt(item.prompt);
-                      setActiveHistoryId(item.id);
-                      setSelectedSegmentIndex(0);
-                    }}
-                    className={`p-2.5 rounded-xl border cursor-pointer transition-all duration-150 ${isSelected ? 'border-primary bg-zinc-900 shadow-lg shadow-primary/10' : 'border-zinc-800 bg-zinc-900/50 hover:border-zinc-700 hover:bg-zinc-900'}`}
-                  >
-                    <div className="aspect-video bg-black rounded-lg overflow-hidden mb-2 relative group">
-                      <video
-                        src={item.segments[0].url}
-                        className="w-full h-full object-cover"
-                        muted
-                        loop
-                        onMouseEnter={(e) => e.currentTarget.play()}
-                        onMouseLeave={(e) => {
-                          e.currentTarget.pause();
-                          e.currentTarget.currentTime = 0;
-                        }}
-                      />
-                      {item.segments.length > 1 && (
-                        <div className="absolute bottom-1.5 right-1.5 bg-black/85 border border-white/15 px-1.5 py-0.5 rounded-full text-[9px] text-white font-bold backdrop-blur">
-                          {item.segments.length} seg
-                        </div>
-                      )}
-                      <div className="absolute inset-0 bg-black/30 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-                        <span className="w-7 h-7 rounded-full bg-white/95 text-black grid place-items-center shadow-lg">
-                          <Play size={12} className="translate-x-[1px] fill-current" />
-                        </span>
-                      </div>
-                    </div>
-                    <p className="text-xs text-zinc-200 line-clamp-2 leading-relaxed font-medium">{item.prompt}</p>
-                    <div className="text-[10px] text-zinc-500 mt-1.5 flex items-center justify-between font-mono">
-                      <span>{item.timestamp.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
-                      <span className="text-primary font-bold tracking-wider uppercase text-[9px]">Recall</span>
-                    </div>
-                  </div>
-                );
-              })
-            )}
           </div>
         )}
-      </aside>
 
-      {/* ── LEFT: Source Media — exact Studio Build sidebar */}
-      <aside className="w-full lg:w-[440px] bg-zinc-900 lg:border-r border-zinc-800 border-b lg:border-b-0 flex flex-col shrink-0 lg:h-full lg:min-h-0">
-        {/* Branding — matches Studio header */}
-        <div className="px-6 lg:px-7 py-5 border-b border-zinc-800 shrink-0">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <span className="w-8 h-8 rounded-xl bg-primary/15 border border-primary/30 flex items-center justify-center shadow-sm">
-                <Layers size={14} className="text-primary" />
-              </span>
-              <div>
-                <h2 className="text-xs font-bold tracking-wider text-white uppercase">Transition Studio</h2>
-                <p className="text-[10px] text-zinc-500 tracking-wide">Dual-Frame Sequence Atelier</p>
-              </div>
-            </div>
-            <span className="text-[9px] tracking-widest uppercase border border-zinc-700 bg-zinc-800 px-2 py-0.5 rounded-full text-zinc-300 font-semibold">Omni 1.1</span>
+        {/* Expanded content — hidden on desktop when collapsed, always visible on mobile */}
+        <div className={sidebarOpen ? 'flex flex-col flex-1 min-h-0' : 'md:hidden flex flex-col flex-1 min-h-0'}>
+          {/* Branding — matches Studio header */}
+          <div className="mb-7">
+            <h2 className="text-lg font-semibold tracking-tight text-white mb-1.5">
+              Bridge your <span className="text-zinc-400 font-normal">transition</span>
+            </h2>
+            <p className="text-xs text-zinc-400 leading-relaxed max-w-sm">Compose, style, and bridge two frames into one uncut cinematic move — seamless, editorial, premium.</p>
           </div>
-          <p className="mt-3 text-xs text-zinc-400 leading-relaxed">Compose, style, and bridge two frames into one uncut cinematic move.</p>
-        </div>
 
-        <div className="flex-1 overflow-y-auto thin-scrollbar p-6 lg:p-7">
           {/* Head Frame — exact Studio Build card */}
           <div className={`mb-6 p-5 rounded-2xl border transition-all duration-200 ${image1 ? 'bg-zinc-950 border-zinc-700 shadow-lg shadow-black/30' : 'bg-zinc-950/70 border-zinc-800 hover:border-zinc-700'}`}>
             <div className="flex items-center justify-between mb-4">
               <div className="flex items-center gap-2.5">
                 <span className="w-5 h-5 rounded-md bg-zinc-800 border border-zinc-700 text-zinc-300 text-[11px] font-semibold flex items-center justify-center shadow-sm">01</span>
-                <h2 className="text-xs font-semibold uppercase tracking-wider text-zinc-200">Head Frame (In)</h2>
+                <h3 className="text-xs font-semibold uppercase tracking-wider text-zinc-200">Head Frame (In)</h3>
               </div>
               {image1 ? (
                 <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10px] font-medium tracking-wide bg-emerald-500/10 text-emerald-700 dark:text-emerald-300 border border-emerald-500/30">
@@ -590,7 +502,7 @@ CRITICAL RULES:
             <div className="flex items-center justify-between mb-4">
               <div className="flex items-center gap-2.5">
                 <span className="w-5 h-5 rounded-md bg-zinc-800 border border-zinc-700 text-zinc-300 text-[11px] font-semibold flex items-center justify-center shadow-sm">02</span>
-                <h2 className="text-xs font-semibold uppercase tracking-wider text-zinc-200">Tail Frame (Out)</h2>
+                <h3 className="text-xs font-semibold uppercase tracking-wider text-zinc-200">Tail Frame (Out)</h3>
               </div>
               {image2 ? (
                 <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10px] font-medium tracking-wide bg-emerald-500/10 text-emerald-700 dark:text-emerald-300 border border-emerald-500/30">
@@ -674,12 +586,12 @@ CRITICAL RULES:
             <input type="file" ref={fileInput2Ref} onChange={(e) => handleFileChange(e, setImage2)} accept="image/*" className="hidden" />
           </div>
 
-          {/* Style References — exact Studio Build card */}
+          {/* Style References — exact Studio Build card 03, square well */}
           <div className={`mb-6 p-5 rounded-2xl border transition-all duration-200 ${references.length > 0 ? 'bg-zinc-950 border-zinc-700 shadow-lg shadow-black/30' : 'bg-zinc-950/70 border-zinc-800 hover:border-zinc-700'}`}>
             <div className="flex items-center justify-between mb-4">
               <div className="flex items-center gap-2.5">
                 <span className="w-5 h-5 rounded-md bg-zinc-800 border border-zinc-700 text-zinc-300 text-[11px] font-semibold flex items-center justify-center shadow-sm">03</span>
-                <h2 className="text-xs font-semibold uppercase tracking-wider text-zinc-200">Style References</h2>
+                <h3 className="text-xs font-semibold uppercase tracking-wider text-zinc-200">Style References</h3>
               </div>
               {references.length > 0 ? (
                 <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10px] font-medium tracking-wide bg-zinc-800 text-zinc-300 border border-zinc-700">
@@ -728,65 +640,32 @@ CRITICAL RULES:
               )}
             </div>
             <input type="file" ref={fileInputRefRef} onChange={handleRefFileChange} accept="image/*,video/*" className="hidden" />
-            <p className="text-[11px] leading-relaxed text-zinc-500 flex items-start gap-1.5">
+            <p className="mt-3 text-[11px] leading-relaxed text-zinc-500 flex items-start gap-1.5">
               <Sparkles size={11} className="text-zinc-600 mt-0.5 shrink-0" />
               <span>References guide style & palette — never copied verbatim. Use images or short clips (max 3).</span>
             </p>
           </div>
 
-          {/* Mobile archive shortcut */}
-          {history.length > 0 && (
-            <div className="lg:hidden">
-              <button
-                onClick={() => setIsArchiveOpen((o) => !o)}
-                className="w-full inline-flex items-center justify-center gap-2 rounded-xl border border-zinc-800 bg-zinc-950 px-4 py-2.5 text-xs font-medium text-zinc-300 hover:border-primary/40 hover:text-primary"
-              >
-                <Clock size={14} /> {isArchiveOpen ? 'Hide' : 'Show'} Reel Archive · {history.length}
+          {/* Hint that videos live in Media Library */}
+          {history.length > 0 && props.onViewAllInLibrary && (
+            <div className="mb-6 rounded-xl border border-zinc-800 bg-zinc-950 p-3 flex items-center gap-3">
+              <span className="w-8 h-8 rounded-lg bg-primary/10 border border-primary/20 grid place-items-center shrink-0">
+                <History size={14} className="text-primary" />
+              </span>
+              <div className="min-w-0 flex-1">
+                <p className="text-xs font-semibold text-white">{history.length} take{history.length > 1 ? 's' : ''} in Media Library</p>
+                <p className="text-[11px] text-zinc-500">Renders → <span className="text-zinc-300">Transitions</span> · same place as Media Library</p>
+              </div>
+              <button onClick={props.onViewAllInLibrary} className="shrink-0 inline-flex items-center gap-1.5 rounded-lg border border-zinc-800 bg-zinc-900 px-3 py-1.5 text-xs font-medium text-zinc-300 hover:border-primary/40 hover:text-primary hover:bg-primary/10 transition-colors">
+                View <ArrowRight size={12} />
               </button>
-              {isArchiveOpen && (
-                <div className="mt-3 space-y-2 max-h-[320px] overflow-y-auto thin-scrollbar p-1">
-                  {history.map((item) => (
-                    <div
-                      key={item.id}
-                      onClick={() => {
-                        setSegments(item.segments);
-                        setPrompt(item.prompt);
-                        setActiveHistoryId(item.id);
-                        setSelectedSegmentIndex(0);
-                      }}
-                      className={`p-2.5 rounded-xl border cursor-pointer ${activeHistoryId === item.id ? 'border-primary bg-zinc-800' : 'border-zinc-800 bg-zinc-950 hover:bg-zinc-800'}`}
-                    >
-                      <p className="text-xs text-zinc-200 line-clamp-2">{item.prompt}</p>
-                      <span className="text-[10px] text-zinc-500 font-mono">{item.timestamp.toLocaleTimeString()}</span>
-                    </div>
-                  ))}
-                </div>
-              )}
             </div>
           )}
-        </div>
-
-        {/* Mobile footer actions */}
-        <div className="lg:hidden p-4 border-t border-zinc-800 flex gap-2.5">
-          <button
-            onClick={handleStartOver}
-            disabled={isGenerating || (!image1 && !image2 && references.length === 0 && segments.length === 0 && !prompt && !technique)}
-            className="flex-1 inline-flex items-center justify-center gap-2 rounded-xl border border-zinc-800 bg-zinc-900 px-4 py-3 text-xs font-semibold uppercase tracking-wider text-zinc-400 hover:text-primary hover:bg-primary/10 hover:border-primary/40 active:scale-[0.98] transition-all disabled:opacity-30"
-          >
-            <RotateCcw size={14} strokeWidth={2} /> Start Over
-          </button>
-          <button
-            onClick={handleExport}
-            disabled={segments.length === 0 || isGenerating}
-            className="flex-1 inline-flex items-center justify-center gap-2 rounded-xl border border-primary bg-primary px-4 py-3 text-xs font-bold uppercase tracking-wider text-on-primary shadow-lg shadow-primary/20 hover:bg-primary-hover active:scale-[0.98] transition-all disabled:opacity-30"
-          >
-            <Download size={14} strokeWidth={2.5} /> Export
-          </button>
         </div>
       </aside>
 
       {/* ── MAIN STAGE ─────────────────────────────────────────────────── */}
-      <main className="flex-1 flex flex-col bg-zinc-950 relative min-w-0 lg:h-full lg:overflow-hidden min-h-[560px] lg:min-h-0">
+      <main className="flex-1 flex flex-col bg-zinc-950 relative min-w-0 md:h-full md:overflow-hidden min-h-[560px] md:min-h-0 w-full md:flex-1">
         {/* Top bar */}
         <header className="h-[56px] border-b border-zinc-800 flex items-center justify-between px-4 lg:px-6 bg-zinc-950 shrink-0 gap-3">
           <div className="hidden md:flex items-center gap-2 text-xs text-zinc-500">
@@ -794,21 +673,22 @@ CRITICAL RULES:
             <span className="font-medium tracking-wide uppercase text-[11px]">Pipeline · Gemini Omni 1.1 Flash</span>
             {segments.length > 0 && <span className="text-zinc-700">·</span>}
             {segments.length > 0 && <span className="text-zinc-300 font-medium">{segments.length * 10}s generated</span>}
+            {history.length > 0 && <span className="hidden lg:inline-flex items-center gap-1.5 ml-2 pl-2 border-l border-zinc-800 text-[11px] text-zinc-400"><History size={11} /> {history.length} in Library</span>}
           </div>
           <div className="flex items-center gap-2.5 ml-auto">
             <button
               onClick={handleStartOver}
               disabled={isGenerating || (!image1 && !image2 && references.length === 0 && segments.length === 0 && !prompt && !technique)}
-              className="hidden lg:inline-flex items-center gap-2 rounded-xl border border-zinc-800 bg-zinc-900 px-4 py-2.5 text-xs font-semibold uppercase tracking-wider text-zinc-400 hover:text-primary hover:bg-primary/10 hover:border-primary/40 hover:shadow-md hover:shadow-primary/5 active:scale-[0.98] transition-all disabled:opacity-30 disabled:cursor-not-allowed disabled:hover:bg-zinc-900 disabled:hover:text-zinc-400 disabled:hover:border-zinc-800 disabled:hover:shadow-none"
+              className="hidden lg:inline-flex items-center gap-2 rounded-lg border border-zinc-800 bg-zinc-900 px-4 py-2.5 text-xs font-semibold uppercase tracking-wider text-zinc-400 hover:text-primary hover:bg-primary/10 hover:border-primary/40 hover:shadow-md hover:shadow-primary/5 active:scale-[0.98] transition-all disabled:opacity-30 disabled:cursor-not-allowed disabled:hover:bg-zinc-900 disabled:hover:text-zinc-400 disabled:hover:border-zinc-800 disabled:hover:shadow-none"
               title="Reset frames, prompts, and active sequence"
             >
-              <RotateCcw size={13} strokeWidth={2} className="text-zinc-500 group-hover:text-primary" />
+              <RotateCcw size={13} strokeWidth={2} />
               Start Over
             </button>
             <button
               onClick={handleExport}
               disabled={segments.length === 0 || isGenerating}
-              className="hidden lg:inline-flex items-center gap-2 rounded-xl border border-primary bg-primary px-5 py-2.5 text-xs font-bold uppercase tracking-wider text-on-primary shadow-lg shadow-primary/20 hover:bg-primary-hover hover:shadow-xl hover:shadow-primary/30 active:scale-[0.98] transition-all disabled:opacity-30 disabled:cursor-not-allowed disabled:hover:bg-primary disabled:shadow-lg"
+              className="hidden lg:inline-flex items-center gap-2 rounded-lg border border-primary bg-primary px-5 py-2.5 text-xs font-bold uppercase tracking-wider text-on-primary shadow-lg shadow-primary/20 hover:bg-primary-hover hover:shadow-xl hover:shadow-primary/30 active:scale-[0.98] transition-all disabled:opacity-30 disabled:cursor-not-allowed disabled:hover:bg-primary disabled:shadow-lg"
             >
               <Download size={13} strokeWidth={2.5} />
               {segments.length > 1 ? 'Export Takes' : 'Export Sequence'}
@@ -825,7 +705,7 @@ CRITICAL RULES:
                   <video src={segments[selectedSegmentIndex].url} className="w-full h-full object-cover" autoPlay loop controls playsInline />
                 ) : (
                   <div className="text-center p-8 flex flex-col items-center justify-center gap-4 max-w-md">
-                    <span className="w-14 h-14 rounded-2xl bg-zinc-800 border border-zinc-700 grid place-items-center text-zinc-400">
+                    <span className="w-14 h-14 rounded-2xl bg-zinc-800 grid place-items-center text-zinc-400">
                       <Film size={22} strokeWidth={1.5} />
                     </span>
                     <div>
@@ -862,7 +742,6 @@ CRITICAL RULES:
                   </div>
                 )}
 
-                {/* subtle corner accents when video present */}
                 {segments.length > 0 && !isGenerating && (
                   <>
                     <span className="pointer-events-none absolute top-3 left-3 w-4 h-4 border-t-2 border-l-2 border-white/15 rounded-tl-lg" />
@@ -874,7 +753,6 @@ CRITICAL RULES:
               </div>
             </div>
 
-            {/* Extension controls */}
             {!isGenerating && segments.length > 0 && selectedSegmentIndex === segments.length - 1 && (
               <div className="flex items-center gap-2.5 w-full max-w-3xl shrink-0">
                 <input
@@ -895,7 +773,6 @@ CRITICAL RULES:
           </div>
         </div>
 
-        {/* Global Error Banner */}
         {error && (
           <div className="absolute top-[64px] left-1/2 -translate-x-1/2 w-[calc(100%-24px)] max-w-lg bg-red-950/90 border border-red-800/50 text-red-200 px-4 py-3 rounded-xl text-xs backdrop-blur-md shadow-2xl z-30 flex items-start gap-3">
             <AlertTriangle size={14} className="text-red-400 mt-0.5 shrink-0" />
@@ -908,7 +785,6 @@ CRITICAL RULES:
 
         {/* ── CONTROL CONSOLE ──────────────────────────────────────────── */}
         <div className="p-4 lg:px-6 lg:py-4 border-t border-zinc-800 bg-zinc-900 shrink-0">
-          {/* Technique selector */}
           <div className="max-w-5xl mx-auto mb-3">
             <div className="flex items-center justify-between mb-2">
               <span className="text-[10px] uppercase tracking-widest text-zinc-500 font-bold">Transition Technique</span>
@@ -939,7 +815,6 @@ CRITICAL RULES:
             )}
           </div>
 
-          {/* Direction — modern textarea */}
           <div className="max-w-5xl mx-auto">
             <div className="group relative flex flex-col gap-3 rounded-2xl border border-zinc-800 bg-zinc-950 p-3 sm:p-4 transition-all duration-200 focus-within:border-primary/50 focus-within:bg-zinc-900/50 focus-within:shadow-lg focus-within:shadow-primary/5 hover:border-zinc-700">
               <div className="flex items-center justify-between gap-3">
@@ -973,7 +848,7 @@ CRITICAL RULES:
                   onClick={handleGenerate}
                   disabled={!canGenerate}
                   title={!image1 || !image2 ? 'Select both frames first' : !prompt.trim() && !technique ? 'Pick a technique or add a direction note' : undefined}
-                  className="bg-primary hover:bg-primary-hover text-on-primary font-bold text-xs px-6 py-3 rounded-xl inline-flex items-center justify-center gap-2 transition-all disabled:opacity-30 disabled:cursor-not-allowed shrink-0 uppercase tracking-wider shadow-lg shadow-primary/20 active:scale-[0.98] sm:self-end"
+                  className="bg-primary hover:bg-primary-hover text-on-primary font-bold text-xs px-6 py-3 rounded-lg inline-flex items-center justify-center gap-2 transition-all disabled:opacity-30 disabled:cursor-not-allowed shrink-0 uppercase tracking-wider shadow-lg shadow-primary/20 active:scale-[0.98] sm:self-end"
                 >
                   <span>Render Transition</span>
                   <ArrowRight size={13} strokeWidth={2.5} />
@@ -982,27 +857,61 @@ CRITICAL RULES:
             </div>
           </div>
 
-          {/* Timeline */}
           {segments.length > 0 && (
-            <div className="max-w-5xl mx-auto mt-3 pt-3 border-t border-zinc-800 flex items-center text-[11px] text-zinc-500 gap-3">
-              <span className="font-mono text-zinc-300 font-bold">00:00</span>
-              <div className="flex-1 flex h-7 bg-zinc-950 border border-zinc-800 rounded-xl overflow-hidden p-1 gap-1">
-                {segments.map((seg, idx) => (
-                  <button
-                    key={idx}
-                    onClick={() => !isGenerating && setSelectedSegmentIndex(idx)}
-                    className={`flex-1 h-full rounded-lg cursor-pointer transition-all flex items-center justify-center text-[10px] tracking-wider uppercase font-bold ${selectedSegmentIndex === idx ? 'bg-primary text-on-primary shadow' : 'bg-zinc-800 text-zinc-400 hover:bg-zinc-700 hover:text-white'}`}
-                  >
-                    {seg.kind === 'transition' ? `Take 01` : `Ext 0${idx}`}
-                  </button>
-                ))}
+            <div className="max-w-5xl mx-auto mt-4 rounded-2xl border border-zinc-800 bg-zinc-950 p-3">
+              <div className="flex items-center justify-between gap-3 mb-2.5">
+                <div className="flex items-center gap-2">
+                  <span className="w-6 h-6 rounded-lg bg-zinc-900 border border-zinc-800 grid place-items-center">
+                    <Film size={11} className="text-zinc-500" />
+                  </span>
+                  <span className="text-[11px] font-bold uppercase tracking-widest text-zinc-300">Timeline</span>
+                  <span className="hidden sm:inline-flex items-center gap-1.5 rounded-full bg-zinc-900 border border-zinc-800 px-2 py-0.5 text-[10px] font-medium text-zinc-500">
+                    <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+                    {segments.length} segment{segments.length > 1 ? 's' : ''}
+                  </span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <span className="inline-flex items-center gap-1.5 rounded-full bg-zinc-900 border border-zinc-800 px-2.5 py-1 text-xs font-mono font-bold text-zinc-200">
+                    <Clock size={11} className="text-zinc-500" />
+                    {`00:${(segments.length * 10).toString().padStart(2, '0')}`}
+                  </span>
+                  <span className="hidden sm:inline text-[10px] uppercase tracking-widest text-zinc-600 font-bold">Total duration</span>
+                </div>
               </div>
-              <span className="font-mono text-zinc-300 font-bold">{`00:${(segments.length * 10).toString().padStart(2, '0')}`}</span>
-              <span className="hidden sm:inline text-[10px] uppercase tracking-widest text-zinc-600 font-bold">Duration</span>
+              <div className="flex items-center gap-2">
+                <span className="hidden sm:inline text-[10px] font-mono font-bold text-zinc-500 tabular-nums">00:00</span>
+                <div className="flex-1 flex h-9 bg-zinc-900 border border-zinc-800 rounded-xl overflow-hidden p-1 gap-1.5 shadow-inner">
+                  {segments.map((seg, idx) => {
+                    const isActive = selectedSegmentIndex === idx;
+                    const label = seg.kind === 'transition' ? `Take ${String(idx + 1).padStart(2, '0')}` : `Extend ${String(idx).padStart(2, '0')}`;
+                    const sub = '10s';
+                    return (
+                      <button
+                        key={idx}
+                        onClick={() => !isGenerating && setSelectedSegmentIndex(idx)}
+                        className={`group flex-1 h-full rounded-lg cursor-pointer transition-all duration-200 flex flex-col items-center justify-center gap-0.5 px-2 border ${
+                          isActive
+                            ? 'bg-primary border-primary text-white shadow-md shadow-primary/20'
+                            : 'bg-zinc-800 border-zinc-700 text-zinc-400 hover:bg-zinc-700 hover:border-zinc-600 hover:text-white'
+                        }`}
+                      >
+                        <span className="text-[11px] font-bold tracking-wider uppercase leading-none flex items-center gap-1">
+                          {isActive && <span className="w-1.5 h-1.5 rounded-full bg-white animate-pulse" />}
+                          {label}
+                        </span>
+                        <span className={`text-[9px] font-mono leading-none ${isActive ? 'text-white/80' : 'text-zinc-500 group-hover:text-zinc-400'}`}>{sub}</span>
+                      </button>
+                    );
+                  })}
+                </div>
+                <span className="hidden sm:inline text-[10px] font-mono font-bold text-zinc-400 tabular-nums">{`00:${(segments.length * 10).toString().padStart(2, '0')}`}</span>
+              </div>
+              <div className="mt-2 flex items-center justify-between text-[10px] text-zinc-600">
+                <span className="flex items-center gap-1.5"><span className="w-2 h-0.5 rounded-full bg-zinc-700" /> Start</span>
+                <span className="flex items-center gap-1.5">End <span className="w-2 h-0.5 rounded-full bg-zinc-700" /></span>
+              </div>
             </div>
           )}
-
-
         </div>
       </main>
     </div>
